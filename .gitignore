@@ -1,0 +1,16 @@
+# Harici kütüphane
+node_modules/
+
+# Whatsapp oturum anahtarları
+auth_info_baileys/
+
+# Gerçek veritabanı dosyaları
+*.db
+*.sqlite
+*.sqlite3
+
+# Şifreler ve özel değişkenler
+.env
+
+# Hata logları
+npm-debug-log*
