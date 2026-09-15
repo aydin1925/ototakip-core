@@ -1,4 +1,5 @@
 const {db, initDatabase} = require('./infrastructure/database/db.js');
+const { connectToWhatsApp } = require('./infrastructure/whatsapp/baileysClient.js')
 
 
 console.log('=== OtoTakip Çekirdek Sistemi Başlatılıyor ===\n');
@@ -45,3 +46,7 @@ const aktifAraclar = db.prepare('SELECT id, plate, customer_name, car_model, mil
 console.log('\n--- Veritabanındaki Aktif İş Emirleri ---');
 console.table(aktifAraclar);
 console.log('\n=== Sistem Başarıyla Çalışıyor ===');
+
+// 4. WhatsApp servisini ayağa kaldır
+console.log('\n--- WhatsApp Servisi Başlatılıyor ---');
+connectToWhatsApp();
