@@ -89,22 +89,22 @@
             <input type="hidden" name="status" id="stage-input">
 
             <% if (vehicle.status === 'RECEIVED') { %>
-                <button type="button" onclick="confirmStageChange('INSPECTING', 'Aracı teşhise almak istiyor musunuz?')" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all flex items-center gap-2">
+                <button type="button" onclick="confirmStageChange('INSPECTING', 'Aracı detaylı teşhis ve arıza tespit aşamasına almak istiyor musunuz?')" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all flex items-center gap-2">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <span>Teşhise Al</span>
                 </button>
             <% } else if (vehicle.status === 'INSPECTING') { %>
-                <button type="button" onclick="confirmStageChange('REPAIRING', 'Parça onarımına ve montaja başlamak istiyor musunuz?')" class="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-semibold text-sm transition-all flex items-center gap-2">
+                <button type="button" onclick="confirmStageChange('REPAIRING', 'Parça onarımına ve montaja başlansın mı? Müşterinizin WhatsApp hattına montaj başladı bildirimi iletilecektir.')" class="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-semibold text-sm transition-all flex items-center gap-2">
                     <i class="fa-solid fa-wrench"></i>
                     <span>Onarıma Başla</span>
                 </button>
             <% } else if (vehicle.status === 'REPAIRING') { %>
-                <button type="button" onclick="confirmStageChange('READY', 'Araç onarımı bitti mi? Teslimata hazır yapılacak.')" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all flex items-center gap-2">
+                <button type="button" onclick="confirmStageChange('READY', 'Araç bakım ve onarımı tamamlandı mı? Müşterinize aracın teslime hazır olduğuna dair WhatsApp mesajı iletilecektir.')" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all flex items-center gap-2 shadow-lg shadow-emerald-600/20">
                     <i class="fa-solid fa-circle-check"></i>
                     <span>Teslimata Hazır Yap</span>
                 </button>
             <% } else if (vehicle.status === 'READY') { %>
-                <button type="button" onclick="confirmStageChange('DELIVERED', 'Araç müşteriye teslim edildi mi? Arşivlenecek.')" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all flex items-center gap-2">
+                <button type="button" onclick="confirmStageChange('DELIVERED', 'Araç müşteriye teslim edildi mi? Müşterinize teşekkür ve iyi yolculuklar mesajı iletilecektir.')" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all flex items-center gap-2">
                     <i class="fa-solid fa-key"></i>
                     <span>Müşteriye Teslim Et</span>
                 </button>
@@ -335,6 +335,10 @@
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('sent') === '1') {
         window.toast && window.toast('Onay talebi müşterinin WhatsApp hattına iletildi!', 'success');
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    if (urlParams.get('stageUpdated') === '1') {
+        window.toast && window.toast('Araç aşaması güncellendi ve müşteriye WhatsApp bildirimi iletildi!', 'success');
         window.history.replaceState({}, document.title, window.location.pathname);
     }
     if (urlParams.get('replied') === '1') {

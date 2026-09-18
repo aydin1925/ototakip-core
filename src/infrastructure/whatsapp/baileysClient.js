@@ -89,25 +89,6 @@ async function connectToWhatsApp() {
             }
         } else if (connection === 'open') {
             console.log('\n✓ [WhatsApp] Bağlantı başarıyla kuruldu ve sistem hazır!\n');
-
-            const testMesaji = 
-                `🚗 *OtoTakip Servis Bilgilendirmesi*\n\n` +
-                `Sayın *Mehmet Yılmaz*,\n` +
-                `*33 BCD 128* plakalı Dacia Sandero Stepway aracınız servisimize kabul edilmiştir.\n\n` +
-                `🔧 *Müşteri Şikayeti:* Ön takımdan lokurtu sesi geliyor, periyodik bakım\n` +
-                `📍 *İstasyon:* Lift 3\n` +
-                `⏱️ *Tahmini Teslim:* 18.09.2026 17:30\n\n` +
-                `⚠️ *Onay Bekleyen Parça:* Ön Salıncak Burcu (1.850 TL)\n` +
-                `Değişimi onaylamak için *1*, reddetmek için *2* yazabilirsiniz.\n` +
-                `Dilerseniz doğrudan ustanıza iletmek istediğiniz bir soruyu da yazabilirsiniz.\n\n` +
-                `🔗 *Canlı Takip Ekranı:* https://ototakip.com/takip/33BCD128`;
-            
-            try {
-                await sendTextMessage(PAIRING_PHONE_NUMBER, testMesaji);
-                console.log(`📨 Canlı test mesajı telefonunuza (${PAIRING_PHONE_NUMBER}) gönderildi! WhatsApp'ınızı kontrol edin.\n`);
-            } catch (err) {
-                console.error('[WhatsApp] Mesaj gönderilemedi:', err.message);
-            }
         }
     });
 

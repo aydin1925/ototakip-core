@@ -53,12 +53,12 @@ function showVehicleDetail(req, res) {
 /**
  * 3. Araç Aşamasını Değiştir (Kabul -> Teşhis -> Onarım -> Hazır -> Teslim) - POST /arac/:id/stage
  */
-function updateStage(req, res) {
-    try {
-        const workOrderId = req.params.id;
-        const { status } = req.body;
-        const workshopId = req.session.workshopId;
+async function updateStage(req, res) {
+    const workOrderId = req.params.id;
+    const { status } = req.body;
+    const workshopId = req.session.workshopId;
 
+    try {
         // 1. Veritabanını güncelle
         workshopService.updateStage(workOrderId, status, workshopId);
 
@@ -68,8 +68,44 @@ function updateStage(req, res) {
             newStatus: status
         });
 
-        // 3. Ustayla aynı sayfada kalması için araca geri yönlendir
-        res.redirect(`/arac/${workOrderId}`);
+        // 3. Müşteriye WhatsApp Otomatik Aşama Bildirimi Gönder
+        try {
+            const car = workshopService.getWorkOrderDetail(workOrderId, workshopId);
+            if (car && car.customer_phone) {
+                let stageMessage = null;
+                const trackingUrl = `https://ototakip.com/takip/${car.plate.replace(/\s+/g, '')}`;
+
+                if (status === 'READY') {
+                    stageMessage = 
+                        `🎉 *Aracınız Teslim Alınmaya Hazır!*\n\n` +
+                        `Sayın *${car.customer_name || 'Müşterimiz'}*,\n` +
+                        `*${car.plate}* plakalı ${car.car_model} aracınızın tüm bakım ve onarım işlemleri başarıyla tamamlanmıştır.\n\n` +
+                        `Aracınızı servisimizden dilediğiniz zaman teslim alabilirsiniz. Keyifli sürüşler dileriz! 🚗✨\n\n` +
+                        `🔗 Canlı Takip Detayları: ${trackingUrl}`;
+                } else if (status === 'DELIVERED') {
+                    stageMessage = 
+                        `🤝 *Aracınız Teslim Edildi*\n\n` +
+                        `Sayın *${car.customer_name || 'Müşterimiz'}*,\n` +
+                        `*${car.plate}* plakalı aracınız bugün teslim edilmiştir. Servisimizi tercih ettiğiniz için teşekkür ederiz.\n\n` +
+                        `Kazansız, belasız iyi yolculuklar dileriz! ⭐⭐⭐⭐⭐`;
+                } else if (status === 'REPAIRING') {
+                    stageMessage = 
+                        `🔧 *Onarım ve Montaj Aşaması Başladı*\n\n` +
+                        `Sayın *${car.customer_name || 'Müşterimiz'}*,\n` +
+                        `*${car.plate}* plakalı aracınızın gerekli parçaları temin edilmiş olup ustanız montaj ve onarım işlemlerine başlamıştır.\n\n` +
+                        `🔗 Canlı Takip: ${trackingUrl}`;
+                }
+
+                if (stageMessage) {
+                    await sendTextMessage(car.customer_phone, stageMessage);
+                }
+            }
+        } catch (waErr) {
+            console.warn('[WhatsApp] Aşama bildirim mesajı iletilemedi:', waErr.message);
+        }
+
+        // 4. Ustayla aynı sayfada kalması için araca geri yönlendir
+        res.redirect(`/arac/${workOrderId}?stageUpdated=1`);
     } catch (err) {
         console.error('Aşama güncelleme hatası:', err.message);
         res.redirect(`/arac/${req.params.id}`);
