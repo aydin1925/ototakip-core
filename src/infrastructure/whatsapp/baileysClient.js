@@ -130,33 +130,68 @@ async function connectToWhatsApp() {
             }
 
             const senderPhone = msg.key.remoteJid;
+            if (!senderPhone) continue;
+
+            // 1. WhatsApp Grupları, Yayın Listeleri ve Durum Güncellemelerini tamamen yoksay
+            if (
+                senderPhone.endsWith('@g.us') || 
+                senderPhone.endsWith('@broadcast') || 
+                senderPhone.endsWith('@newsletter') ||
+                senderPhone === 'status@broadcast'
+            ) {
+                continue;
+            }
+
+            // 2. Kendi attığımız dış mesajları yoksay (Sadece kendine not / test amaçlı kendi numaramıza yazıyorsak izin ver)
+            if (msg.key.fromMe) {
+                const isSelfTest = PAIRING_PHONE_NUMBER && (senderPhone.includes(PAIRING_PHONE_NUMBER) || senderPhone.endsWith('@lid'));
+                if (!isSelfTest) {
+                    continue; // Kendi telefonumuzdan başka bir arkadaşımıza yazarken bot araya girmesin
+                }
+            }
+
             const cleanText = incomingText.trim().toLowerCase();
             
-            // Eğer WhatsApp'ın gizli cihaz kimliği (@lid) ise veya test numaramızsa
-            let cleanPhone;
-            if (senderPhone.endsWith('@lid') || senderPhone.includes(PAIRING_PHONE_NUMBER)) {
-                cleanPhone = PAIRING_PHONE_NUMBER;
-            } else {
-                cleanPhone = senderPhone.split('@')[0].split(':')[0].replace(/\D/g, '');
-            }
-
-            console.log(`\n📩 [Yeni WhatsApp Mesajı] Kimden: ${senderPhone}`);
-            console.log(`   İçerik: "${incomingText}"`);
-            console.log(`   Aranan Telefon: ${cleanPhone}`);
-
-            // Veritabanından bu müşterinin aktif iş emrini ve bekleyen parça talebini bul
-            const workOrder = db.prepare('SELECT * FROM work_orders WHERE customer_phone = ? AND status != ?').get(cleanPhone, 'DELIVERED');
+            // Telefon numarasını temizle
+            let cleanPhone = senderPhone.split('@')[0].split(':')[0].replace(/\D/g, '');
             
-            let activeRequest = null;
-            if (workOrder) {
-                activeRequest = db.prepare('SELECT * FROM approval_requests WHERE work_order_id = ? ORDER BY id DESC LIMIT 1').get(workOrder.id);
+            // Eğer WhatsApp'ın gizli cihaz kimliği (@lid) ise veya test numaramızsa
+            if (senderPhone.endsWith('@lid')) {
+                if (msg.key.fromMe || (PAIRING_PHONE_NUMBER && senderPhone.includes(PAIRING_PHONE_NUMBER))) {
+                    cleanPhone = PAIRING_PHONE_NUMBER;
+                } else {
+                    // Tanımlanamayan @lid kimliği (kişisel sohbet gizlilik id'si) -> İşleme alma
+                    continue;
+                }
             }
 
-            console.log(`   Bulunan Araç: ${workOrder ? workOrder.plate + ' - ' + workOrder.customer_name : 'BULUNAMADI'}`);
+            // 3. Veritabanından bu müşterinin aktif iş emrini bul (Son 10 hane esnekliğiyle)
+            const last10Digits = cleanPhone.slice(-10);
+            const workOrder = db.prepare(`
+                SELECT * FROM work_orders 
+                WHERE (customer_phone = ? OR customer_phone LIKE ?) 
+                  AND status != 'DELIVERED'
+                ORDER BY id DESC LIMIT 1
+            `).get(cleanPhone, `%${last10Digits}`);
+
+            // 4. KRİTİK GÜVENLİK DUVARI:
+            // Eğer bu numaranın sistemde aktif bir araç/tamir kaydı yoksa,
+            // bu kişi kişisel bir tanıdıktır (arkadaş, aile vb.).
+            // KESİNLİKLE HİÇBİR CEVAP GÖNDERME VE MESAJI YOK SAY!
+            if (!workOrder) {
+                continue;
+            }
+
+            // Bu aşamaya ulaşıldıysa mesaj kesinlikle servisteki bir müşteriden gelmiştir!
+            console.log(`\n📩 [Müşteri WhatsApp Mesajı] Araç: ${workOrder.plate} (${workOrder.customer_name})`);
+            console.log(`   İçerik: "${incomingText}"`);
+            console.log(`   Numara: ${cleanPhone}`);
+
+            const activeRequest = db.prepare('SELECT * FROM approval_requests WHERE work_order_id = ? ORDER BY id DESC LIMIT 1').get(workOrder.id);
             console.log(`   Mevcut Talep: ${activeRequest ? activeRequest.part_name + ' (' + activeRequest.status + ')' : 'YOK'}`);
 
-            // 1. Onay Durumu ("1", "onay", "tamamdır", "onaylıyorum")
-            if (['1', 'onay', 'onaylıyorum', 'tamamdır', 'kabul'].includes(cleanText)) {
+            // 1. Onay Durumu ("onaylıyorum", "kabul ediyorum", "onay", "kabul", "1")
+            if (['onaylıyorum', 'kabul ediyorum', 'onay', 'kabul', 'tamamdır', '1'].includes(cleanText)) {
                 if (activeRequest && activeRequest.status === 'PENDING') {
                     // Durumu APPROVED yap ve zamanı kaydet
                     db.prepare("UPDATE approval_requests SET status = 'APPROVED', responded_at = datetime('now', 'localtime') WHERE id = ?").run(activeRequest.id);
@@ -188,16 +223,27 @@ async function connectToWhatsApp() {
                     });
                 } else {
                     await sock.sendMessage(senderPhone, {
-                        text: `Sayın *${workOrder?.customer_name || 'Müşterimiz'}*, şu anda onay bekleyen aktif bir parça talebiniz bulunmamaktadır.`
+                        text: `Sayın *${workOrder.customer_name}*, şu anda onay bekleyen aktif bir parça talebiniz bulunmamaktadır.`
                     });
                 }
             }
-            // 2. Red Durumu ("2", "red", "reddediyorum", "istemiyorum", "iptal")
-            else if (['2', 'red', 'reddediyorum', 'istemiyorum', 'iptal'].includes(cleanText)) {
+            // 2. Red Durumu ("reddediyorum", "kabul etmiyorum", "red", "iptal", "2")
+            else if (['reddediyorum', 'kabul etmiyorum', 'red', 'istemiyorum', 'iptal', '2'].includes(cleanText)) {
                 if (activeRequest && activeRequest.status === 'PENDING') {
                     // Durumu REJECTED yap
                     db.prepare("UPDATE approval_requests SET status = 'REJECTED', responded_at = datetime('now', 'localtime') WHERE id = ?").run(activeRequest.id);
                     console.log(`   ➔ [Veritabanı Güncellendi] ${workOrder.plate} - ${activeRequest.part_name}: REJECTED ✗`);
+
+                    // Canlı SSE yayını: Ustanın ekranına iptal bilgisini bildir
+                    try {
+                        sseService.broadcast('APPROVAL_REJECTED', {
+                            workOrderId: workOrder.id,
+                            plate: workOrder.plate,
+                            partName: activeRequest.part_name
+                        });
+                    } catch (e) {
+                        // sessiz geç
+                    }
 
                     await sock.sendMessage(senderPhone, {
                         text: `ℹ *İptal Edildi.*\n\nSayın *${workOrder.customer_name}*, *${activeRequest.part_name}* değişim talebiniz reddedildi olarak kaydedildi. Parça takılmayacaktır.`
@@ -214,16 +260,39 @@ async function connectToWhatsApp() {
                     });
                 } else {
                     await sock.sendMessage(senderPhone, {
-                        text: `Sayın *${workOrder?.customer_name || 'Müşterimiz'}*, şu anda reddedilecek aktif bir parça talebiniz bulunmamaktadır.`
+                        text: `Sayın *${workOrder.customer_name}*, şu anda reddedilecek aktif bir parça talebiniz bulunmamaktadır.`
                     });
                 }
             }
             // 3. Serbest Soru / Müşteri Özel Talebi
             else {
-                console.log(`\n🔔 [USTA BİLDİRİMİ GEREKLİ] Müşteri (${workOrder?.customer_name || 'Bilinmeyen'} - ${workOrder?.plate || ''}) sordu: "${incomingText}"`);
+                console.log(`\n🔔 [USTA BİLDİRİMİ GEREKLİ] Müşteri (${workOrder.customer_name} - ${workOrder.plate}) sordu: "${incomingText}"`);
                 console.log(`   İletişim Numarası: ${senderPhone}`);
+
+                // Gelen soruyu veritabanına kalıcı olarak kaydet
+                try {
+                    db.prepare(`
+                        INSERT INTO customer_messages (work_order_id, sender_type, message_text)
+                        VALUES (?, 'CUSTOMER', ?)
+                    `).run(workOrder.id, incomingText.trim());
+                } catch (dbErr) {
+                    console.error('Mesaj veritabanına kaydedilemedi:', dbErr.message);
+                }
+
+                // Canlı SSE yayını: Ustanın ekranına soru bildirimini fırlat
+                try {
+                    sseService.broadcast('CUSTOMER_QUESTION', {
+                        workOrderId: workOrder.id,
+                        plate: workOrder.plate,
+                        customerName: workOrder.customer_name,
+                        text: incomingText
+                    });
+                } catch (e) {
+                    // sessiz geç
+                }
+
                 await sock.sendMessage(senderPhone, {
-                    text: 'Mesajınız ustanıza iletildi. En kısa sürede sizi telefonla arayacak veya buradan bilgi verecektir. 👨‍🔧'
+                    text: `Sayın *${workOrder.customer_name}*, mesajınız ustanıza iletildi. En kısa sürede ustanız kontrol edip size bilgi verecektir. 👨‍🔧`
                 });
             }
         }
@@ -265,6 +334,38 @@ async function sendImageMessage(phone, imagePathOrBuffer, caption = '') {
     });
 }
 
+/**
+ * Usta web masasından parça onay talebi gönderdiğinde müşteriye resmi WhatsApp mesajı atar.
+ */
+async function sendApprovalRequestMessage(customerPhone, car, part) {
+    if (!currentSocket) {
+        throw new Error('WhatsApp servisi şu an bağlı değil. Lütfen bağlantıyı kontrol edin.');
+    }
+
+    const jid = formatToWhatsappJid(customerPhone);
+    if (!jid) {
+        throw new Error('Geçersiz müşteri telefon numarası.');
+    }
+
+    const trackingUrl = `http://localhost:3000/takip/${car.plate.replace(/\s+/g, '')}`;
+
+    const text = 
+        `🚗 *OtoTakip Bilgilendirme*\n\n` +
+        `Sayın *${car.customer_name || 'Müşterimiz'}*,\n` +
+        `*${car.plate}* plakalı (*${car.car_model}*) aracınızın kontrolleri sırasında ustanız parça değişimi için onayınızı talep etmektedir:\n\n` +
+        `🔧 *Değişecek Parça:* ${part.part_name}\n` +
+        `💰 *Fiyat / Açıklama:* ${part.note || 'Belirtilmedi'}\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━\n` +
+        `✅ Parça değişimini onaylamak için bu mesaja:\n` +
+        `👉 *ONAYLIYORUM* (veya *KABUL EDİYORUM*)\n\n` +
+        `❌ Talebi iptal etmek için:\n` +
+        `👉 *REDDEDİYORUM*\n` +
+        `━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `🔗 *Canlı Araç Takibi:* ${trackingUrl}`;
+
+    return await currentSocket.sendMessage(jid, { text });
+}
+
 function getSocket() {
     return currentSocket;
 }
@@ -273,6 +374,7 @@ module.exports = {
     connectToWhatsApp,
     sendTextMessage,
     sendImageMessage,
+    sendApprovalRequestMessage,
     formatToWhatsappJid,
     getSocket
 };

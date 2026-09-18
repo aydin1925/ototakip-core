@@ -1,5 +1,6 @@
 const workshopService = require('../services/workshopService');
 const sseService = require('../services/sseService');
+const { sendApprovalRequestMessage, sendTextMessage } = require('../infrastructure/whatsapp/baileysClient');
 
 /**
  * 1. Ana Usta Paneli (Lift Görünümü) - GET /dashboard
@@ -93,9 +94,90 @@ function createWorkOrder(req, res) {
     }
 }
 
+/**
+ * 5. Müşteriye WhatsApp Parça Onay Talebi Gönder - POST /arac/:id/onay-talep
+ */
+async function sendApprovalRequest(req, res) {
+    const workOrderId = req.params.id;
+    const { part_name, note } = req.body;
+    const workshopId = req.session.workshopId;
+
+    try {
+        if (!part_name) {
+            throw new Error('Parça adı zorunludur.');
+        }
+
+        // 1. Aracı ve müşteri telefonunu veritabanından çek
+        const car = workshopService.getWorkOrderDetail(workOrderId, workshopId);
+
+        // 2. Onay talebini SQLite'a PENDING olarak kaydet
+        const newApproval = workshopService.createApprovalRequest(workOrderId, part_name, note);
+
+        // 3. Müşterinin WhatsApp'ına resmi onay mesajını gönder
+        try {
+            await sendApprovalRequestMessage(car.customer_phone, car, newApproval);
+        } catch (waErr) {
+            console.warn('WhatsApp mesajı gönderilemedi (bot offline olabilir):', waErr.message);
+        }
+
+        // 4. Canlı yayına bildir (tarayıcıdaki usta masasını güncelle)
+        sseService.broadcast('NEW_APPROVAL_REQUEST', {
+            workOrderId: Number(workOrderId),
+            partName: part_name
+        });
+
+        res.redirect(`/arac/${workOrderId}?sent=1`);
+    } catch (err) {
+        console.error('Onay talebi oluşturma hatası:', err.message);
+        res.redirect(`/arac/${workOrderId}?error=${encodeURIComponent(err.message)}`);
+    }
+}
+
+/**
+ * 6. Müşterinin Sorusuna WhatsApp'tan Cevap Yaz - POST /arac/:id/mesaj-cevap
+ */
+async function replyToCustomer(req, res) {
+    const workOrderId = req.params.id;
+    const { reply_text } = req.body;
+    const workshopId = req.session.workshopId;
+
+    try {
+        if (!reply_text || !reply_text.trim()) {
+            throw new Error('Lütfen müşteriye gönderilecek cevabı yazınız.');
+        }
+
+        // 1. Aracı ve müşteri numarasını getir
+        const car = workshopService.getWorkOrderDetail(workOrderId, workshopId);
+
+        // 2. Cevabı veritabanına MECHANIC olarak kaydet
+        workshopService.saveMechanicReply(workOrderId, reply_text);
+
+        // 3. Müşterinin telefonuna resmi WhatsApp yanıtını gönder
+        try {
+            const messageBody = `👨‍🔧 *Ustanızdan Bilgilendirme*\n\nSayın *${car.customer_name || 'Müşterimiz'}*,\n${reply_text.trim()}`;
+            await sendTextMessage(car.customer_phone, messageBody);
+        } catch (waErr) {
+            console.warn('WhatsApp yanıt mesajı iletilemedi:', waErr.message);
+        }
+
+        // 4. Canlı yayına bildir (sohbeti güncelle)
+        sseService.broadcast('REPLY_SENT', {
+            workOrderId: Number(workOrderId),
+            text: reply_text.trim()
+        });
+
+        res.redirect(`/arac/${workOrderId}?replied=1`);
+    } catch (err) {
+        console.error('Müşteri yanıtlama hatası:', err.message);
+        res.redirect(`/arac/${workOrderId}?error=${encodeURIComponent(err.message)}`);
+    }
+}
+
 module.exports = {
     showDashboard,
     showVehicleDetail,
     updateStage,
-    createWorkOrder
+    createWorkOrder,
+    sendApprovalRequest,
+    replyToCustomer
 };

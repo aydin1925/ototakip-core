@@ -63,6 +63,18 @@ CREATE TABLE IF NOT EXISTS service_photos (
     FOREIGN KEY (work_order_id) REFERENCES work_orders(id) ON DELETE CASCADE
 );
 
+-- 5. MÜŞTERİ VE USTA MESAJLAŞMA GEÇMİŞİ (WHATSAPP CRM)
+CREATE TABLE IF NOT EXISTS customer_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    work_order_id INTEGER NOT NULL,
+    sender_type TEXT NOT NULL,          -- 'CUSTOMER' (müşteri) veya 'MECHANIC' (usta)
+    message_text TEXT NOT NULL,
+    is_read INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (work_order_id) REFERENCES work_orders(id) ON DELETE CASCADE
+);
+
 -- Hızlı Arama İndeksleri
 CREATE INDEX IF NOT EXISTS idx_work_orders_plate ON work_orders(plate);
 CREATE INDEX IF NOT EXISTS idx_work_orders_status ON work_orders(status);
+CREATE INDEX IF NOT EXISTS idx_customer_messages_work_order ON customer_messages(work_order_id);

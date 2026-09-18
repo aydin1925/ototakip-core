@@ -66,10 +66,19 @@ function getWorkOrderDetail(workOrderId, workshopId = 1) {
         WHERE work_order_id = ? 
         ORDER BY created_at DESC
     `).all(workOrderId);
+
+    // Bu araca ait müşteri-usta mesajlaşma geçmişi
+    const messages = db.prepare(`
+        SELECT * FROM customer_messages 
+        WHERE work_order_id = ? 
+        ORDER BY created_at ASC
+    `).all(workOrderId);
+
     return {
         ...workOrder,
         approvals,
-        photos
+        photos,
+        messages
     };
 }
 /**
@@ -169,10 +178,59 @@ function getTrackingDataByPlate(rawPlate) {
     };
 }
 
+/**
+ * 6. Yeni Parça Onay Talebi Aç
+ */
+function createApprovalRequest(workOrderId, partName, note) {
+    if (!workOrderId || !partName) {
+        throw new Error('İş emri ve parça adı zorunludur.');
+    }
+
+    const stmt = db.prepare(`
+        INSERT INTO approval_requests (work_order_id, part_name, note, status)
+        VALUES (?, ?, ?, 'PENDING')
+    `);
+
+    const result = stmt.run(workOrderId, partName.trim(), note ? note.trim() : null);
+
+    return {
+        id: Number(result.lastInsertRowid),
+        work_order_id: workOrderId,
+        part_name: partName.trim(),
+        note: note ? note.trim() : null,
+        status: 'PENDING'
+    };
+}
+
+/**
+ * 7. Ustanın Müşteriye Yazdığı Yanıtı Kaydet
+ */
+function saveMechanicReply(workOrderId, replyText) {
+    if (!workOrderId || !replyText) {
+        throw new Error('İş emri ve cevap metni zorunludur.');
+    }
+
+    const stmt = db.prepare(`
+        INSERT INTO customer_messages (work_order_id, sender_type, message_text, is_read)
+        VALUES (?, 'MECHANIC', ?, 1)
+    `);
+
+    const result = stmt.run(workOrderId, replyText.trim());
+
+    return {
+        id: Number(result.lastInsertRowid),
+        work_order_id: workOrderId,
+        sender_type: 'MECHANIC',
+        message_text: replyText.trim()
+    };
+}
+
 module.exports = {
     getDashboardData,
     getWorkOrderDetail,
     updateStage,
     createWorkOrder,
-    getTrackingDataByPlate
+    getTrackingDataByPlate,
+    createApprovalRequest,
+    saveMechanicReply
 };

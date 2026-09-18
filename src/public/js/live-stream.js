@@ -27,17 +27,39 @@
                     window.toast('🔔 Müşteri WhatsApp üzerinden parçayı ONAYLADI!', 'success');
                 }
                 // Usta lift ekranındaysa veya araç detayındaysa içeriği güncelle
-                setTimeout(() => window.location.reload(), 1500);
+                setTimeout(() => window.location.reload(), 1200);
             }
 
-            // 3. Aracın Aşaması Değiştiğinde
+            // 3. Müşteri WhatsApp'tan Parça Talebini REDDETTİĞİNDE
+            if (payload.type === 'APPROVAL_REJECTED') {
+                if (window.toast) {
+                    window.toast('⚠️ Müşteri parça değişim talebini REDDETTİ!', 'error');
+                }
+                setTimeout(() => window.location.reload(), 1200);
+            }
+
+            // 4. Müşteri WhatsApp'tan Serbest Soru Yazdığında
+            if (payload.type === 'CUSTOMER_QUESTION') {
+                if (window.toast) {
+                    const plateInfo = payload.data && payload.data.plate ? `(${payload.data.plate}) ` : '';
+                    window.toast(`💬 Müşteri ${plateInfo}yazdı: "${payload.data ? payload.data.text : ''}"`, 'info');
+                }
+
+                // Usta şu an bu aracın detay ekranındaysa sohbeti anında tazele
+                const currentPath = window.location.pathname;
+                if (payload.data && payload.data.workOrderId && currentPath.includes(`/arac/${payload.data.workOrderId}`)) {
+                    setTimeout(() => window.location.reload(), 1200);
+                }
+            }
+
+            // 5. Aracın Aşaması Değiştiğinde
             if (payload.type === 'STAGE_CHANGED') {
                 if (window.toast) {
                     window.toast('Araç tamir aşaması güncellendi.', 'info');
                 }
             }
 
-            // 4. Yeni Araç Kabul Edildiğinde
+            // 6. Yeni Araç Kabul Edildiğinde
             if (payload.type === 'NEW_VEHICLE') {
                 if (window.toast) {
                     window.toast(`Yeni araç lifte alındı: ${payload.data ? payload.data.plate : ''}`, 'info');
