@@ -1,0 +1,177 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Geri Dön ve Başlık Barı -->
+    <div class="flex items-center justify-between gap-4 mb-6">
+        <a href="/dashboard" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-white transition-colors">
+            <i class="fa-solid fa-arrow-left text-xs"></i>
+            <span>Liftlere Geri Dön</span>
+        </a>
+
+        <!-- Türk Plakası Tasarımı -->
+        <div class="inline-flex items-center bg-white text-black font-mono font-black px-3 py-1 rounded-md border-2 border-slate-700 tracking-wider text-base shadow">
+            <span class="bg-blue-700 text-white text-[10px] px-1.5 py-0.5 rounded -ml-2.5 mr-2 font-sans font-bold">TR</span>
+            <%= vehicle.plate %>
+        </div>
+    </div>
+
+    <!-- Üst Araç Bilgi Kartı -->
+    <div class="rounded-3xl bg-slate-900 border border-slate-800 p-6 sm:p-8 shadow-xl mb-8 relative overflow-hidden">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+                <span class="px-3 py-1 rounded-lg bg-orange-500/10 text-orange-400 text-xs font-bold border border-orange-500/20">
+                    <i class="fa-solid fa-arrow-up-from-bracket mr-1"></i> <%= vehicle.station || 'Lift 1' %>
+                </span>
+                <h1 class="text-2xl sm:text-3xl font-black text-white mt-3"><%= vehicle.car_model %></h1>
+                <div class="flex flex-wrap items-center gap-4 text-sm text-slate-400 mt-2">
+                    <span><i class="fa-solid fa-user text-slate-500 mr-1.5"></i><%= vehicle.customer_name || 'Müşteri Belirtilmedi' %></span>
+                    <span>•</span>
+                    <span><i class="fa-brands fa-whatsapp text-emerald-500 mr-1.5"></i><%= vehicle.customer_phone %></span>
+                    <% if (vehicle.mileage) { %>
+                        <span>•</span>
+                        <span><i class="fa-solid fa-gauge-high text-slate-500 mr-1.5"></i><%= vehicle.mileage.toLocaleString('tr-TR') %> KM</span>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Tahmini Teslimat -->
+            <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 self-start md:self-auto text-right">
+                <div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Hedef Teslimat</div>
+                <div class="text-base font-bold text-white mt-1">
+                    <%= vehicle.estimated_delivery || 'Belirlenmedi' %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Müşteri Şikayeti Kutusu -->
+        <% if (vehicle.initial_complaint) { %>
+            <div class="mt-6 p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-sm text-slate-300">
+                <span class="font-bold text-orange-400">Müşteri Şikayeti:</span> <%= vehicle.initial_complaint %>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- 4 AŞAMALI DURUM İLERLETİCİ (STEPPER) -->
+    <div class="rounded-3xl bg-slate-900 border border-slate-800 p-6 sm:p-8 shadow-xl mb-8">
+        <h2 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-orange-500"></i>
+            <span>Tamir Süreci ve Aşama Yönetimi</span>
+        </h2>
+
+        <!-- Aşamaların Görsel Akışı -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+            <% 
+                const stages = [
+                    { key: 'RECEIVED', label: '1. Kabul Edildi', icon: 'fa-clipboard-check' },
+                    { key: 'INSPECTING', label: '2. Teşhiste', icon: 'fa-magnifying-glass' },
+                    { key: 'REPAIRING', label: '3. Onarımda', icon: 'fa-wrench' },
+                    { key: 'READY', label: '4. Teslimata Hazır', icon: 'fa-circle-check' }
+                ];
+                const stageOrder = ['RECEIVED', 'INSPECTING', 'REPAIRING', 'READY', 'DELIVERED'];
+                const currentIndex = stageOrder.indexOf(vehicle.status);
+            %>
+
+            <% stages.forEach((s, idx) => { 
+                const isPassed = currentIndex >= idx;
+                const isCurrent = vehicle.status === s.key;
+            %>
+                <div class="p-4 rounded-2xl border text-center transition-all <%= isCurrent ? 'bg-orange-600/10 border-orange-500 text-orange-400 ring-2 ring-orange-500/20' : (isPassed ? 'bg-slate-950 border-emerald-500/30 text-emerald-400' : 'bg-slate-950/50 border-slate-800 text-slate-500') %>">
+                    <i class="fa-solid <%= s.icon %> text-xl mb-2"></i>
+                    <div class="text-xs font-bold"><%= s.label %></div>
+                    <div class="text-[10px] mt-1 font-semibold uppercase tracking-wider">
+                        <%= isCurrent ? 'ŞU ANKİ AŞAMA' : (isPassed ? 'TAMAMLANDI' : 'BEKLİYOR') %>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+
+        <!-- Aşama Değiştirme Butonları -->
+        <form id="stage-form" action="/arac/<%= vehicle.id %>/stage" method="POST" class="flex flex-wrap items-center gap-3 pt-6 border-t border-slate-800">
+            <input type="hidden" name="status" id="stage-input">
+
+            <% if (vehicle.status === 'RECEIVED') { %>
+                <button type="button" onclick="confirmStageChange('INSPECTING', 'Aracı teşhise almak istiyor musunuz?')" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Teşhise Al</span>
+                </button>
+            <% } else if (vehicle.status === 'INSPECTING') { %>
+                <button type="button" onclick="confirmStageChange('REPAIRING', 'Parça onarımına ve montaja başlamak istiyor musunuz?')" class="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-semibold text-sm transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-wrench"></i>
+                    <span>Onarıma Başla</span>
+                </button>
+            <% } else if (vehicle.status === 'REPAIRING') { %>
+                <button type="button" onclick="confirmStageChange('READY', 'Araç onarımı bitti mi? Teslimata hazır yapılacak.')" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Teslimata Hazır Yap</span>
+                </button>
+            <% } else if (vehicle.status === 'READY') { %>
+                <button type="button" onclick="confirmStageChange('DELIVERED', 'Araç müşteriye teslim edildi mi? Arşivlenecek.')" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-key"></i>
+                    <span>Müşteriye Teslim Et</span>
+                </button>
+            <% } %>
+        </form>
+    </div>
+
+    <!-- WHATSAPP DİJİTAL PARÇA ONAY MASASI -->
+    <div class="rounded-3xl bg-slate-900 border border-slate-800 p-6 sm:p-8 shadow-xl">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i class="fa-brands fa-whatsapp text-emerald-500 text-xl"></i>
+                <span>WhatsApp Parça ve Fiyat Onayları</span>
+            </h2>
+            <span class="text-xs text-slate-400">Müşterinin telefonundan anlık tetiklenir</span>
+        </div>
+
+        <% if (!vehicle.approvals || vehicle.approvals.length === 0) { %>
+            <div class="text-center py-8 px-4 rounded-2xl bg-slate-950 border border-slate-800/80 text-slate-400 text-sm">
+                Bu araç için henüz parça onay talebi gönderilmemiş.
+            </div>
+        <% } else { %>
+            <div class="space-y-4">
+                <% vehicle.approvals.forEach(appr => { %>
+                    <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <div class="text-base font-bold text-white"><%= appr.part_name %></div>
+                            <div class="text-sm text-slate-400 mt-1"><%= appr.note || 'Açıklama belirtilmedi' %></div>
+                            <div class="text-xs text-slate-500 mt-2">
+                                <i class="fa-regular fa-clock mr-1"></i>Talep Zamanı: <%= appr.requested_at %>
+                            </div>
+                        </div>
+
+                        <!-- Onay Rozeti -->
+                        <div>
+                            <% if (appr.status === 'APPROVED') { %>
+                                <div class="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                                    <span>MÜŞTERİ ONAYLADI</span>
+                                </div>
+                            <% } else if (appr.status === 'PENDING') { %>
+                                <div class="px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-sm flex items-center gap-2 animate-pulse">
+                                    <i class="fa-regular fa-clock text-amber-500"></i>
+                                    <span>ONAY BEKLENİYOR (WhatsApp)</span>
+                                </div>
+                            <% } else { %>
+                                <div class="px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 font-bold text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-circle-xmark text-rose-500"></i>
+                                    <span>MÜŞTERİ REDDETTİ</span>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        <% } %>
+    </div>
+
+</div>
+
+<!-- Aşama Değiştirme Onay Scripti (SweetAlert2) -->
+<script>
+    async function confirmStageChange(newStage, confirmText) {
+        const result = await window.confirmModal('Aşama Güncellemesi', confirmText, 'Evet, İlerlet');
+        if (result && result.isConfirmed) {
+            document.getElementById('stage-input').value = newStage;
+            document.getElementById('stage-form').submit();
+        }
+    }
+</script>

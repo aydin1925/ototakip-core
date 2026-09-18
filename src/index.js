@@ -1,6 +1,7 @@
 require('dotenv').config();
 const {db, initDatabase} = require('./infrastructure/database/db.js');
 const { connectToWhatsApp } = require('./infrastructure/whatsapp/baileysClient.js');
+const { startWebServer } = require('./server.js');
 
 
 console.log('=== OtoTakip Çekirdek Sistemi Başlatılıyor ===\n');
@@ -68,3 +69,6 @@ console.log('\n=== Sistem Başarıyla Çalışıyor ===');
 // 4. WhatsApp servisini ayağa kaldır
 console.log('\n--- WhatsApp Servisi Başlatılıyor ---');
 connectToWhatsApp();
+
+// 5. Express Web Sunucusunu Başlat
+startWebServer();

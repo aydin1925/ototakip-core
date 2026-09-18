@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="tr" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'OtoTakip' %></title>
+    
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome İkonları -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- SweetAlert2 + Koyu (Dark) Tema -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@5/dark.css">
+</head>
+<body class="min-h-full flex flex-col font-sans antialiased selection:bg-orange-500 selection:text-white">
+
+    <!-- Üst Menü / Navbar -->
+    <%- include('../partials/navbar') %>
+
+    <!-- Sayfa İçeriği Buraya Enjekte Edilir -->
+    <main class="flex-1">
+        <%- body %>
+    </main>
+
+    <!-- SweetAlert2 Global Yardımcıları (Toast ve Onay Pencereleri) -->
+    <script>
+        // 1. Sağ üstten kayan zarif Toast bildirimi
+        window.toast = function(title, icon = 'success') {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: icon,
+                title: title,
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true,
+                background: '#0f172a',
+                color: '#f8fafc'
+            });
+        };
+
+        // 2. Kritik aksiyonlar için onay penceresi (örn: Aracı teslim etme)
+        window.confirmModal = async function(title, text, confirmBtnText = 'Evet, Devam Et') {
+            return Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ea580c',
+                cancelButtonColor: '#334155',
+                confirmButtonText: confirmBtnText,
+                cancelButtonText: 'Vazgeç',
+                background: '#0f172a',
+                color: '#f8fafc'
+            });
+        };
+    </script>
+
+    <!-- Canlı SSE Dinleyicisi (WhatsApp bildirimleri geldiğinde window.toast tetikler) -->
+    <script src="/js/live-stream.js"></script>
+</body>
+</html>

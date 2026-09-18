@@ -1,6 +1,20 @@
+-- 0. ATÖLYELER VE USTALAR (GİRİŞ VE KAYIT HESAPLARI)
+CREATE TABLE IF NOT EXISTS workshops (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    workshop_name TEXT NOT NULL,          -- Atölye / Dükkan Adı (örn: 'Yılmaz Oto Servis')
+    owner_name TEXT NOT NULL,             -- Usta / Yetkili Adı (örn: 'Ahmet Yılmaz')
+    phone TEXT NOT NULL UNIQUE,           -- Giriş için telefon numarası (örn: '905321112233')
+    email TEXT,                           -- E-posta (opsiyonel)
+    password_hash TEXT NOT NULL,          -- Kriptolanmış şifre özeti
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_workshops_phone ON workshops(phone);
+
 -- 1. İŞ EMİRLERİ (ARAÇLAR) TABLOSU
 CREATE TABLE IF NOT EXISTS work_orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    workshop_id INTEGER DEFAULT 1,         -- Hangi atölyeye ait?
     plate TEXT NOT NULL,                   -- Plaka (örn: '34 BJK 1903')
     customer_phone TEXT NOT NULL,          -- Müşteri Telefonu
     customer_name TEXT,                    -- Müşteri Adı

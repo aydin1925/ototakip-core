@@ -18,6 +18,17 @@ db.exec('PRAGMA foreign_keys = ON;');
 function initDatabase() {
     const schemaSql = fs.readFileSync(schemaPath, 'utf8');
     db.exec(schemaSql);
+
+    // Mevcut veritabanı için migration: work_orders tablosunda workshop_id yoksa ekle
+    try {
+        const columns = db.prepare("PRAGMA table_info(work_orders)").all();
+        if (!columns.some(col => col.name === 'workshop_id')) {
+            db.exec("ALTER TABLE work_orders ADD COLUMN workshop_id INTEGER DEFAULT 1;");
+        }
+    } catch (e) {
+        // Pas geç
+    }
+
     console.log('✓ SQLite veritabanı ve tablolar başarıyla hazırlandı: ototakip.db');
 }
 

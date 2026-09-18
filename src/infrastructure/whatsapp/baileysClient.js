@@ -9,6 +9,7 @@ const pino = require('pino');
 const path = require('path');
 const fs = require('fs');
 const { db } = require('../database/db.js');
+const sseService = require('../../services/sseService.js');
 
 // Aktif soket referansını modül seviyesinde tutuyoruz
 let currentSocket = null;
@@ -160,6 +161,17 @@ async function connectToWhatsApp() {
                     // Durumu APPROVED yap ve zamanı kaydet
                     db.prepare("UPDATE approval_requests SET status = 'APPROVED', responded_at = datetime('now', 'localtime') WHERE id = ?").run(activeRequest.id);
                     console.log(`   ➔ [Veritabanı Güncellendi] ${workOrder.plate} - ${activeRequest.part_name}: APPROVED ✓`);
+
+                    // Canlı SSE yayını: Ustanın tarayıcısını anında yeşile çevir
+                    try {
+                        sseService.broadcast('APPROVAL_CONFIRMED', {
+                            workOrderId: workOrder.id,
+                            plate: workOrder.plate,
+                            partName: activeRequest.part_name
+                        });
+                    } catch (e) {
+                        // sessiz geç
+                    }
 
                     await sock.sendMessage(senderPhone, {
                         text: `✓ *Onayınız Sisteme İşlendi!*\n\nSayın *${workOrder.customer_name}*, *${activeRequest.part_name}* değişimi onayınız alındı. Ustanız parça montajına başladı.\n\n🔗 Canlı Takip: https://ototakip.com/takip/${workOrder.plate.replace(/\s+/g, '')}`
