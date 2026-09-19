@@ -29,6 +29,36 @@ function initDatabase() {
         // Pas geç
     }
 
+    // Migration: approval_requests tablosunda price kolonu yoksa ekle
+    try {
+        const approvalCols = db.prepare("PRAGMA table_info(approval_requests)").all();
+        if (!approvalCols.some(col => col.name === 'price')) {
+            db.exec("ALTER TABLE approval_requests ADD COLUMN price REAL DEFAULT 0;");
+        }
+    } catch (e) {
+        // Pas geç
+    }
+
+    // Migration: service_receipts tablosu yoksa oluştur
+    try {
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS service_receipts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                work_order_id INTEGER NOT NULL UNIQUE,
+                labor_cost REAL DEFAULT 0,
+                parts_cost REAL DEFAULT 0,
+                total_amount REAL DEFAULT 0,
+                notes TEXT,
+                items_json TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (work_order_id) REFERENCES work_orders(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_service_receipts_work_order ON service_receipts(work_order_id);
+        `);
+    } catch (e) {
+        // Pas geç
+    }
+
     console.log('✓ SQLite veritabanı ve tablolar başarıyla hazırlandı: ototakip.db');
 }
 

@@ -102,10 +102,13 @@ async function connectToWhatsApp() {
 
             // Botun kendi gönderdiği mesajları atla (sonsuz döngü koruması)
             if (
-                incomingText.startsWith('🚗 *OtoTakip') ||
-                incomingText.startsWith('✓ *Onayınız') ||
-                incomingText.startsWith('ℹ *İptal') ||
-                incomingText.startsWith('Mesajınız ustanıza')
+                incomingText.startsWith('🚗') ||
+                incomingText.startsWith('✓') ||
+                incomingText.startsWith('ℹ') ||
+                incomingText.startsWith('👨‍🔧') ||
+                incomingText.startsWith('🧾') ||
+                incomingText.startsWith('Sayın *') ||
+                incomingText.includes('Mesajınız ustanıza')
             ) {
                 continue;
             }
@@ -272,8 +275,13 @@ async function connectToWhatsApp() {
                     // sessiz geç
                 }
 
+                const trackingUrl = `https://ototakip.com/takip/${workOrder.plate.replace(/\s+/g, '')}`;
                 await sock.sendMessage(senderPhone, {
-                    text: `Sayın *${workOrder.customer_name}*, mesajınız ustanıza iletildi. En kısa sürede ustanız kontrol edip size bilgi verecektir. 👨‍🔧`
+                    text: 
+                        `👨‍🔧 *Mesajınız Ustanıza İletildi*\n\n` +
+                        `Sayın *${workOrder.customer_name || 'Müşterimiz'}*,\n` +
+                        `İlettiğiniz mesaj servis ekranında ustanızın önüne düşmüştür. Ustanız en kısa sürede buradan size geri dönüş yapacaktır.\n\n` +
+                        `🔗 *Canlı Araç Takibi:*\n${trackingUrl}`
                 });
             }
         }
@@ -347,6 +355,52 @@ async function sendApprovalRequestMessage(customerPhone, car, part) {
     return await currentSocket.sendMessage(jid, { text });
 }
 
+/**
+ * Müşteriye Dijital Servis Fişi / Hesap Özeti WhatsApp Mesajı Gönderir
+ */
+async function sendServiceReceiptMessage(customerPhone, car, receipt, workshopName = 'Oto Servis') {
+    if (!currentSocket) {
+        throw new Error('WhatsApp servisi şu an bağlı değil. Lütfen bağlantıyı kontrol edin.');
+    }
+
+    const jid = formatToWhatsappJid(customerPhone);
+    if (!jid) {
+        throw new Error('Geçersiz müşteri telefon numarası.');
+    }
+
+    const trackingUrl = `https://ototakip.com/takip/${car.plate.replace(/\s+/g, '')}`;
+
+    // Kalemleri formatla
+    let itemsText = '';
+    if (receipt.items && receipt.items.length > 0) {
+        itemsText = receipt.items.map(item => `• ${item.name}: *${Number(item.price).toLocaleString('tr-TR')} TL*`).join('\n');
+    } else {
+        itemsText = '• Genel Servis Bakım Kalemleri';
+    }
+
+    const laborText = receipt.labor_cost > 0 
+        ? `\n• Periyodik Bakım & Usta İşçiliği: *${Number(receipt.labor_cost).toLocaleString('tr-TR')} TL*` 
+        : '';
+
+    const text = 
+        `🧾 *${workshopName.toUpperCase()} - DİJİTAL SERVİS FİŞİ & HESAP ÖZETİ*\n` +
+        `━━━━━━━━━━━━━━━━━━━━━\n` +
+        `👤 *Müşteri:* ${car.customer_name || 'Değerli Müşterimiz'}\n` +
+        `🚗 *Araç:* ${car.plate} (${car.car_model})\n` +
+        `📅 *Tarih:* ${new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}\n` +
+        `━━━━━━━━━━━━━━━━━━━━━\n` +
+        `📋 *YAPILAN İŞLEMLER VE KALEMLER:*\n` +
+        `${itemsText}${laborText}\n` +
+        `━━━━━━━━━━━━━━━━━━━━━\n` +
+        `💰 *GENEL TOPLAM TUTAR:* *${Number(receipt.total_amount).toLocaleString('tr-TR')} TL*\n` +
+        `━━━━━━━━━━━━━━━━━━━━━\n` +
+        (receipt.notes ? `ℹ️ *Servis Notu:* ${receipt.notes}\n\n` : '\n') +
+        `🔗 *Detaylı Fiş ve Ekspertiz Raporu:*\n${trackingUrl}\n\n` +
+        `Bizi tercih ettiğiniz için teşekkür eder, keyifli ve güvenli sürüşler dileriz! ⭐⭐⭐⭐⭐`;
+
+    return await currentSocket.sendMessage(jid, { text });
+}
+
 function getSocket() {
     return currentSocket;
 }
@@ -356,6 +410,7 @@ module.exports = {
     sendTextMessage,
     sendImageMessage,
     sendApprovalRequestMessage,
+    sendServiceReceiptMessage,
     formatToWhatsappJid,
     getSocket
 };

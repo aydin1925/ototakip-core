@@ -124,10 +124,16 @@
                                 <span class="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-400 font-semibold border border-blue-500/20">Kabul Edildi</span>
                             <% } else if (car.status === 'INSPECTING') { %>
                                 <span class="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-400 font-semibold border border-purple-500/20">Teşhiste</span>
+                            <% } else if (car.status === 'WAITING_PARTS') { %>
+                                <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 font-semibold border border-amber-500/20">📦 Parça Bekliyor</span>
                             <% } else if (car.status === 'REPAIRING') { %>
-                                <span class="px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-400 font-semibold border border-orange-500/20">Onarımda</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-400 font-semibold border border-orange-500/20">🔧 Onarımda</span>
+                            <% } else if (car.status === 'TESTING') { %>
+                                <span class="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 font-semibold border border-indigo-500/20">🚗 Testte</span>
                             <% } else if (car.status === 'READY') { %>
-                                <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">Teslimata Hazır</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">✓ Teslime Hazır</span>
+                            <% } else if (car.status === 'DELIVERED') { %>
+                                <span class="px-2.5 py-1 rounded-lg bg-slate-500/10 text-slate-400 font-semibold border border-slate-500/20">Teslim Edildi</span>
                             <% } %>
                         </div>
 

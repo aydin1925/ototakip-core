@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS approval_requests (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     work_order_id INTEGER NOT NULL,
     part_name TEXT NOT NULL,               -- Değişecek parça adı
+    price REAL DEFAULT 0,                  -- Parça birim fiyatı (TL)
     note TEXT,                             -- Usta açıklaması
     status TEXT NOT NULL DEFAULT 'PENDING',-- 'PENDING', 'APPROVED', 'REJECTED'
     requested_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -74,7 +75,21 @@ CREATE TABLE IF NOT EXISTS customer_messages (
     FOREIGN KEY (work_order_id) REFERENCES work_orders(id) ON DELETE CASCADE
 );
 
+-- 6. DİJİTAL SERVİS FİŞLERİ VE HESAP ÖZETLERİ
+CREATE TABLE IF NOT EXISTS service_receipts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    work_order_id INTEGER NOT NULL UNIQUE, -- Bir iş emrine ait aktif fiş
+    labor_cost REAL DEFAULT 0,             -- İşçilik Tutarı (TL)
+    parts_cost REAL DEFAULT 0,             -- Onaylı Parçalar Toplamı (TL)
+    total_amount REAL DEFAULT 0,           -- Genel Toplam (TL)
+    notes TEXT,                            -- Ustanın garanti/fatura notu
+    items_json TEXT,                       -- Fiş kalemlerinin JSON dökümü
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (work_order_id) REFERENCES work_orders(id) ON DELETE CASCADE
+);
+
 -- Hızlı Arama İndeksleri
 CREATE INDEX IF NOT EXISTS idx_work_orders_plate ON work_orders(plate);
 CREATE INDEX IF NOT EXISTS idx_work_orders_status ON work_orders(status);
 CREATE INDEX IF NOT EXISTS idx_customer_messages_work_order ON customer_messages(work_order_id);
+CREATE INDEX IF NOT EXISTS idx_service_receipts_work_order ON service_receipts(work_order_id);

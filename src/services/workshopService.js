@@ -14,10 +14,12 @@ function getDashboardData(workshopId = 1) {
         ORDER BY 
             CASE 
                 WHEN status = 'INSPECTING' THEN 1
-                WHEN status = 'REPAIRING' THEN 2
-                WHEN status = 'RECEIVED' THEN 3
-                WHEN status = 'READY' THEN 4
-                ELSE 5
+                WHEN status = 'WAITING_PARTS' THEN 2
+                WHEN status = 'REPAIRING' THEN 3
+                WHEN status = 'TESTING' THEN 4
+                WHEN status = 'RECEIVED' THEN 5
+                WHEN status = 'READY' THEN 6
+                ELSE 7
             END,
             created_at DESC`).all(workshopId);
 
@@ -75,18 +77,22 @@ function getWorkOrderDetail(workOrderId, workshopId = 1) {
         ORDER BY created_at ASC
     `).all(workOrderId);
 
+    // Bu araca ait dijital servis fişi / hesap özeti (varsa)
+    const receipt = getReceiptByWorkOrderId(workOrderId);
+
     return {
         ...workOrder,
         approvals,
         photos,
-        messages
+        messages,
+        receipt
     };
 }
 /**
  * 3. Araç Aşamasını Güncelle (Kabul -> Teşhis -> Onarım -> Hazır -> Teslim Edildi)
  */
 function updateStage(workOrderId, newStatus, workshopId = 1) {
-    const validStatuses = ['RECEIVED', 'INSPECTING', 'REPAIRING', 'READY', 'DELIVERED'];
+    const validStatuses = ['RECEIVED', 'INSPECTING', 'WAITING_PARTS', 'REPAIRING', 'TESTING', 'READY', 'DELIVERED'];
     if (!validStatuses.includes(newStatus)) {
         throw new Error('Geçersiz aşama durumu.');
     }
@@ -101,9 +107,10 @@ function updateStage(workOrderId, newStatus, workshopId = 1) {
         `);
         return stmt.run(newStatus, now, now, workOrderId, workshopId);
     }
+    // Başka bir aşamaya çekildiyse completed_at'i sıfırla (geri alma senaryoları için)
     const stmt = db.prepare(`
         UPDATE work_orders 
-        SET status = ?, updated_at = ?
+        SET status = ?, updated_at = ?, completed_at = NULL
         WHERE id = ? AND workshop_id = ?
     `);
     return stmt.run(newStatus, now, workOrderId, workshopId);
@@ -181,32 +188,46 @@ function getTrackingDataByPlate(rawPlate) {
         ORDER BY created_at DESC
     `).all(workOrder.id);
 
+    // Varsa dijital servis fişi / hesap özeti
+    const receipt = getReceiptByWorkOrderId(workOrder.id);
+
     return {
         ...workOrder,
         approvals,
-        photos
+        photos,
+        receipt
     };
 }
 
 /**
  * 6. Yeni Parça Onay Talebi Aç
  */
-function createApprovalRequest(workOrderId, partName, note) {
+function createApprovalRequest(workOrderId, partName, note, rawPrice = 0) {
     if (!workOrderId || !partName) {
         throw new Error('İş emri ve parça adı zorunludur.');
     }
 
+    let price = Number(rawPrice) || 0;
+    // Eğer fiyat ayrıca girilmediyse, note içindeki '1.200 TL' veya '1200 TL' kalıbını otomatik ayıkla
+    if (price === 0 && note) {
+        const match = note.match(/(\d{1,3}(?:\.\d{3})*(?:,\d+)?|\d+)\s*(?:TL|tl)/);
+        if (match) {
+            price = parseFloat(match[1].replace(/\./g, '').replace(',', '.')) || 0;
+        }
+    }
+
     const stmt = db.prepare(`
-        INSERT INTO approval_requests (work_order_id, part_name, note, status)
-        VALUES (?, ?, ?, 'PENDING')
+        INSERT INTO approval_requests (work_order_id, part_name, price, note, status)
+        VALUES (?, ?, ?, ?, 'PENDING')
     `);
 
-    const result = stmt.run(workOrderId, partName.trim(), note ? note.trim() : null);
+    const result = stmt.run(workOrderId, partName.trim(), price, note ? note.trim() : null);
 
     return {
         id: Number(result.lastInsertRowid),
         work_order_id: workOrderId,
         part_name: partName.trim(),
+        price,
         note: note ? note.trim() : null,
         status: 'PENDING'
     };
@@ -259,6 +280,95 @@ function addServicePhoto(workOrderId, photoPath, caption = '', tag = 'Ekspertiz'
     };
 }
 
+/**
+ * 9. Dijital Servis Fişi / Hesap Özeti Kaydet veya Güncelle
+ */
+function saveServiceReceipt(workOrderId, data) {
+    const { labor_cost = 0, items = [], notes = '' } = data;
+
+    const partsCost = items.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+    const laborCost = Number(labor_cost) || 0;
+    const totalAmount = partsCost + laborCost;
+    const itemsJson = JSON.stringify(items);
+
+    const existing = db.prepare('SELECT id FROM service_receipts WHERE work_order_id = ?').get(workOrderId);
+
+    if (existing) {
+        const stmt = db.prepare(`
+            UPDATE service_receipts 
+            SET labor_cost = ?, parts_cost = ?, total_amount = ?, notes = ?, items_json = ?, created_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `);
+        stmt.run(laborCost, partsCost, totalAmount, notes ? notes.trim() : null, itemsJson, existing.id);
+        return {
+            id: existing.id,
+            work_order_id: workOrderId,
+            labor_cost: laborCost,
+            parts_cost: partsCost,
+            total_amount: totalAmount,
+            notes: notes ? notes.trim() : null,
+            items
+        };
+    } else {
+        const stmt = db.prepare(`
+            INSERT INTO service_receipts (work_order_id, labor_cost, parts_cost, total_amount, notes, items_json)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        const result = stmt.run(workOrderId, laborCost, partsCost, totalAmount, notes ? notes.trim() : null, itemsJson);
+        return {
+            id: Number(result.lastInsertRowid),
+            work_order_id: workOrderId,
+            labor_cost: laborCost,
+            parts_cost: partsCost,
+            total_amount: totalAmount,
+            notes: notes ? notes.trim() : null,
+            items
+        };
+    }
+}
+
+/**
+ * 10. İlgili İş Emrinin Dijital Servis Fişini Getir
+ */
+function getReceiptByWorkOrderId(workOrderId) {
+    const row = db.prepare('SELECT * FROM service_receipts WHERE work_order_id = ? ORDER BY id DESC LIMIT 1').get(workOrderId);
+    if (!row) return null;
+    try {
+        row.items = JSON.parse(row.items_json || '[]');
+    } catch (e) {
+        row.items = [];
+    }
+    return row;
+}
+
+/**
+ * 11. Arşivdeki (Teslim Edilmiş) Araçları Getir ve Ara
+ */
+function getArchiveData(workshopId = 1, searchQuery = '') {
+    let sql = `
+        SELECT w.*, r.total_amount as invoice_amount, r.id as receipt_id
+        FROM work_orders w
+        LEFT JOIN service_receipts r ON r.work_order_id = w.id
+        WHERE w.workshop_id = ? AND w.status = 'DELIVERED'
+    `;
+    const params = [workshopId];
+
+    if (searchQuery && searchQuery.trim()) {
+        const q = `%${searchQuery.trim().toUpperCase()}%`;
+        sql += ` AND (
+            UPPER(w.plate) LIKE ? OR 
+            UPPER(w.customer_name) LIKE ? OR 
+            w.customer_phone LIKE ? OR 
+            UPPER(w.car_model) LIKE ?
+        )`;
+        params.push(q, q, q, q);
+    }
+
+    sql += ` ORDER BY w.completed_at DESC, w.updated_at DESC`;
+
+    return db.prepare(sql).all(...params);
+}
+
 module.exports = {
     getDashboardData,
     getWorkOrderDetail,
@@ -267,5 +377,8 @@ module.exports = {
     getTrackingDataByPlate,
     createApprovalRequest,
     saveMechanicReply,
-    addServicePhoto
+    addServicePhoto,
+    saveServiceReceipt,
+    getReceiptByWorkOrderId,
+    getArchiveData
 };

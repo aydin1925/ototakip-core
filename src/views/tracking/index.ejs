@@ -51,20 +51,31 @@
             <%
                 const stages = [
                     { key: 'RECEIVED', label: 'Kabul Edildi', desc: 'Aracınız atölyeye giriş yaptı', icon: 'fa-clipboard-check' },
-                    { key: 'INSPECTING', label: 'Arıza Teşhisi Yapılıyor', desc: 'Ustanız lift üzerinde kontrolleri sürdürüyor', icon: 'fa-magnifying-glass' },
-                    { key: 'REPAIRING', label: 'Parça Değişimi & Onarımda', desc: 'Gerekli parça ve montaj işlemleri yapılıyor', icon: 'fa-wrench' },
-                    { key: 'READY', label: 'Teslimata Hazır', desc: 'İşlemler bitti, aracınızı teslim alabilirsiniz', icon: 'fa-circle-check' }
+                    { key: 'INSPECTING', label: 'Arıza Teşhisi Yapılıyor', desc: 'Ustanız lift üzerinde kontrolleri sürdürüyor', icon: 'fa-magnifying-glass' }
                 ];
-                const stageOrder = ['RECEIVED', 'INSPECTING', 'REPAIRING', 'READY', 'DELIVERED'];
+
+                // Eğer araç şu anda parça bekliyorsa veya onaylı/bekleyen parça varsa göster
+                if (vehicle.status === 'WAITING_PARTS' || (vehicle.approvals && vehicle.approvals.length > 0)) {
+                    stages.push({ key: 'WAITING_PARTS', label: 'Yedek Parça Bekleniyor', desc: 'Gerekli yedek parçaların tedariği bekleniyor', icon: 'fa-boxes-packing' });
+                }
+
+                stages.push(
+                    { key: 'REPAIRING', label: 'Onarım & Montajda', desc: 'Parça değişimi ve mekanik işlemler yapılıyor', icon: 'fa-wrench' },
+                    { key: 'TESTING', label: 'Yol Testi & Son Kontrol', desc: 'Ustanız son güvenlik ve sürüş testini yapıyor', icon: 'fa-road' },
+                    { key: 'READY', label: 'Teslimata Hazır', desc: 'Tüm işlemler bitti, aracınızı teslim alabilirsiniz', icon: 'fa-circle-check' }
+                );
+
+                const stageOrder = ['RECEIVED', 'INSPECTING', 'WAITING_PARTS', 'REPAIRING', 'TESTING', 'READY', 'DELIVERED'];
                 const currentIdx = stageOrder.indexOf(vehicle.status);
             %>
 
-            <div class="space-y-4">
-                <% stages.forEach((s, idx) => { 
-                    const isPassed = currentIdx >= idx;
+            <div class="space-y-3.5">
+                <% stages.forEach((s) => { 
+                    const sIdx = stageOrder.indexOf(s.key);
+                    const isPassed = currentIdx > sIdx || vehicle.status === 'DELIVERED';
                     const isCurrent = vehicle.status === s.key;
                 %>
-                    <div class="flex items-start gap-4 p-3.5 rounded-2xl transition-all <%= isCurrent ? 'bg-orange-600/10 border border-orange-500/30' : (isPassed ? 'bg-slate-950/60' : 'opacity-40') %>">
+                    <div class="flex items-start gap-4 p-3.5 rounded-2xl transition-all <%= isCurrent ? 'bg-orange-600/10 border border-orange-500/30 ring-1 ring-orange-500/20' : (isPassed ? 'bg-slate-950/60' : 'opacity-40') %>">
                         <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm shrink-0 <%= isCurrent ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : (isPassed ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-500') %>">
                             <i class="fa-solid <%= s.icon %>"></i>
                         </div>
@@ -138,6 +149,61 @@
                         </div>
                     <% }); %>
                 </div>
+            </div>
+        <% } %>
+
+        <!-- DİJİTAL SERVİS FİŞİ & HESAP ÖZETİ (FATURA KARTI) -->
+        <% if (vehicle.receipt) { %>
+            <div class="rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-xl mb-6 relative overflow-hidden">
+                <!-- Üst Fiş Başlığı -->
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                            ✓ Onaylı Servis Fişi
+                        </span>
+                        <h3 class="text-base font-bold text-white mt-2 flex items-center gap-2">
+                            <i class="fa-solid fa-receipt text-emerald-400"></i>
+                            <span>Hesap & Masraf Özeti</span>
+                        </h3>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-[11px] text-slate-400 font-medium">Toplam Tutar</div>
+                        <div class="text-xl sm:text-2xl font-black text-emerald-400 font-mono">
+                            <%= Number(vehicle.receipt.total_amount).toLocaleString('tr-TR') %> TL
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fiş Kalemleri -->
+                <div class="space-y-2 mb-4">
+                    <% if (vehicle.receipt.items && vehicle.receipt.items.length > 0) { %>
+                        <% vehicle.receipt.items.forEach(it => { %>
+                            <div class="flex items-center justify-between py-2 px-3 rounded-xl bg-slate-950 border border-slate-800/80 text-xs">
+                                <span class="text-slate-300 font-medium flex items-center gap-2">
+                                    <i class="fa-solid fa-wrench text-orange-400 text-[10px]"></i>
+                                    <%= it.name %>
+                                </span>
+                                <span class="font-mono font-bold text-white"><%= Number(it.price).toLocaleString('tr-TR') %> TL</span>
+                            </div>
+                        <% }); %>
+                    <% } %>
+
+                    <% if (vehicle.receipt.labor_cost > 0) { %>
+                        <div class="flex items-center justify-between py-2 px-3 rounded-xl bg-slate-950 border border-slate-800/80 text-xs">
+                            <span class="text-slate-300 font-medium flex items-center gap-2">
+                                <i class="fa-solid fa-user-gear text-cyan-400 text-[10px]"></i>
+                                Periyodik Bakım & Usta İşçiliği
+                            </span>
+                            <span class="font-mono font-bold text-white"><%= Number(vehicle.receipt.labor_cost).toLocaleString('tr-TR') %> TL</span>
+                        </div>
+                    <% } %>
+                </div>
+
+                <% if (vehicle.receipt.notes) { %>
+                    <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 text-xs text-slate-400">
+                        <strong class="text-slate-300">Garanti / Not:</strong> <%= vehicle.receipt.notes %>
+                    </div>
+                <% } %>
             </div>
         <% } %>
 
