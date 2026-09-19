@@ -141,6 +141,36 @@
             </div>
         <% } %>
 
+        <!-- HİZMET VE PARÇA FOTOĞRAFLARI (EKSPERTİZ KANITI) -->
+        <% if (vehicle.photos && vehicle.photos.length > 0) { %>
+            <div class="rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-xl mb-6">
+                <h3 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-camera text-sky-400"></i>
+                    <span>Hizmet & Parça Fotoğrafları</span>
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">Ustanızın araç üzerinde tespit ettiği ve değiştirdiği parçaların görsel kanıtları</p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <% vehicle.photos.forEach(p => { %>
+                        <div class="rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden shadow">
+                            <a href="<%= p.photo_path %>" target="_blank" class="block relative group">
+                                <img src="<%= p.photo_path %>" alt="<%= p.caption || 'Parça Fotoğrafı' %>" class="w-full h-44 object-cover group-hover:opacity-90 transition">
+                                <div class="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-slate-950/80 backdrop-blur-sm text-[10px] text-white font-semibold flex items-center gap-1 border border-slate-700">
+                                    <i class="fa-solid fa-expand"></i> Büyüt
+                                </div>
+                            </a>
+                            <div class="p-3">
+                                <div class="text-xs font-semibold text-slate-200"><%= p.caption || 'Servis Fotoğrafı' %></div>
+                                <div class="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
+                                    <i class="fa-regular fa-clock"></i> <%= p.created_at %>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            </div>
+        <% } %>
+
         <!-- USTA İLE WHATSAPP İLETİŞİM BUTONU -->
         <div class="text-center">
             <a 

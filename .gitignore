@@ -14,3 +14,11 @@ auth_info_baileys/
 
 # Hata logları
 npm-debug-log*
+
+# Yüklenen servis fotoğrafları (Klasörü koru, içindeki resimleri yoksay)
+src/public/uploads/*
+!src/public/uploads/.gitkeep
+
+# SQLite geçici log dosyaları (-wal ve -shm)
+*.db*
+*.sqlite*

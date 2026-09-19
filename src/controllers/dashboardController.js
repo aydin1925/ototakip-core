@@ -1,6 +1,6 @@
 const workshopService = require('../services/workshopService');
 const sseService = require('../services/sseService');
-const { sendApprovalRequestMessage, sendTextMessage } = require('../infrastructure/whatsapp/baileysClient');
+const { sendApprovalRequestMessage, sendTextMessage, sendImageMessage } = require('../infrastructure/whatsapp/baileysClient');
 
 /**
  * 1. Ana Usta Paneli (Lift Görünümü) - GET /dashboard
@@ -209,11 +209,58 @@ async function replyToCustomer(req, res) {
     }
 }
 
+/**
+ * 7. Araca Servis/Ekspertiz Fotoğrafı Yükle - POST /arac/:id/foto-yukle
+ */
+async function uploadVehiclePhoto(req, res) {
+    const workOrderId = req.params.id;
+    const { caption, send_whatsapp } = req.body;
+    const workshopId = req.session.workshopId;
+
+    try {
+        if (!req.file) {
+            throw new Error('Lütfen yüklenecek bir fotoğraf seçiniz.');
+        }
+
+        const relativePhotoPath = `/uploads/${req.file.filename}`;
+        const absolutePhotoPath = req.file.path;
+
+        // 1. Veritabanına kaydet
+        workshopService.addServicePhoto(workOrderId, relativePhotoPath, caption);
+
+        // 2. Müşteriye WhatsApp görseli olarak gönder (Seçildiyse)
+        if (send_whatsapp === 'on' || send_whatsapp === '1') {
+            try {
+                const car = workshopService.getWorkOrderDetail(workOrderId, workshopId);
+                if (car && car.customer_phone) {
+                    const trackingUrl = `https://ototakip.com/takip/${car.plate.replace(/\s+/g, '')}`;
+                    const captionText = 
+                        `📸 *Araç İnceleme & Parça Fotoğrafı*\n\n` +
+                        `Sayın *${car.customer_name || 'Müşterimiz'}*,\n` +
+                        `*${car.plate}* plakalı aracınızın servis kontrolünde çekilen parça görseli ekte bilgilerinize sunulmuştur:\n\n` +
+                        `🔍 *Açıklama:* ${caption ? caption.trim() : 'Hasarlı/Aşınmış parça kanıtı'}\n\n` +
+                        `🔗 Detaylı Canlı Takip: ${trackingUrl}`;
+
+                    await sendImageMessage(car.customer_phone, absolutePhotoPath, captionText);
+                }
+            } catch (waErr) {
+                console.warn('[WhatsApp] Fotoğraf iletilemedi:', waErr.message);
+            }
+        }
+
+        res.redirect(`/arac/${workOrderId}?photoUploaded=1`);
+    } catch (err) {
+        console.error('Fotoğraf yükleme hatası:', err.message);
+        res.redirect(`/arac/${workOrderId}?error=${encodeURIComponent(err.message)}`);
+    }
+}
+
 module.exports = {
     showDashboard,
     showVehicleDetail,
     updateStage,
     createWorkOrder,
     sendApprovalRequest,
-    replyToCustomer
+    replyToCustomer,
+    uploadVehiclePhoto
 };

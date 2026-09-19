@@ -62,7 +62,8 @@ function getWorkOrderDetail(workOrderId, workshopId = 1) {
     `).all(workOrderId);
     // Bu araca ait fotoğraflar
     const photos = db.prepare(`
-        SELECT * FROM service_photos 
+        SELECT *, file_path as photo_path, description as caption 
+        FROM service_photos 
         WHERE work_order_id = ? 
         ORDER BY created_at DESC
     `).all(workOrderId);
@@ -172,9 +173,18 @@ function getTrackingDataByPlate(rawPlate) {
         ORDER BY requested_at DESC
     `).all(workOrder.id);
 
+    // Servis ve parça fotoğrafları
+    const photos = db.prepare(`
+        SELECT *, file_path as photo_path, description as caption 
+        FROM service_photos 
+        WHERE work_order_id = ? 
+        ORDER BY created_at DESC
+    `).all(workOrder.id);
+
     return {
         ...workOrder,
-        approvals
+        approvals,
+        photos
     };
 }
 
@@ -225,6 +235,30 @@ function saveMechanicReply(workOrderId, replyText) {
     };
 }
 
+/**
+ * 8. Araca Servis / Parça Fotoğrafı Ekle
+ */
+function addServicePhoto(workOrderId, photoPath, caption = '', tag = 'Ekspertiz') {
+    if (!workOrderId || !photoPath) {
+        throw new Error('İş emri ve fotoğraf yolu zorunludur.');
+    }
+
+    const stmt = db.prepare(`
+        INSERT INTO service_photos (work_order_id, tag, description, file_path)
+        VALUES (?, ?, ?, ?)
+    `);
+
+    const result = stmt.run(workOrderId, tag, caption ? caption.trim() : null, photoPath);
+
+    return {
+        id: Number(result.lastInsertRowid),
+        work_order_id: workOrderId,
+        tag: tag,
+        caption: caption ? caption.trim() : null,
+        photo_path: photoPath
+    };
+}
+
 module.exports = {
     getDashboardData,
     getWorkOrderDetail,
@@ -232,5 +266,6 @@ module.exports = {
     createWorkOrder,
     getTrackingDataByPlate,
     createApprovalRequest,
-    saveMechanicReply
+    saveMechanicReply,
+    addServicePhoto
 };
