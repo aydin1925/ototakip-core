@@ -7,7 +7,10 @@ router.get('/', (req, res) => {
     if (req.session && req.session.workshopId) {
         return res.redirect('/dashboard');
     }
-    res.render('index', { title: 'OtoTakip - Akıllı Servis ve Onay Sistemi' });
+    res.render('index', { 
+        title: 'OtoTakip — Servisiniz Konuşsun, Siz İşinize Odaklanın',
+        layout: 'layouts/landing'
+    });
 });
 
 module.exports = router;

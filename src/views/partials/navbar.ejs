@@ -1,51 +1,78 @@
-<header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+<!-- ŞIK CAM ÜST MENÜ -->
+<div class="px-4 sm:px-8 pt-4 sm:pt-6 w-full sticky top-0 z-50">
+    <header class="nav-glass h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between rounded-2xl mx-auto max-w-7xl">
         
-        <!-- Logo ve Başlık -->
-        <a href="/" class="flex items-center gap-3 group">
-            <div class="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-600/30 group-hover:scale-105 transition-transform">
-                <i class="fa-solid fa-wrench text-lg"></i>
-            </div>
-            <div>
-                <span class="text-xl font-black tracking-tight text-white">Oto<span class="text-orange-500">Takip</span></span>
-                <span class="hidden sm:inline-block ml-2 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-md">Usta Masası</span>
-            </div>
-        </a>
-
-        <!-- Sağ Menü: Oturum Kontrolü -->
-        <div class="flex items-center gap-4">
-            <% if (typeof currentWorkshop !== 'undefined' && currentWorkshop) { %>
-                <!-- Giriş Yapmış Usta -->
-                <a href="/dashboard" class="text-sm font-medium text-slate-300 hover:text-white transition-colors flex items-center gap-2">
-                    <i class="fa-solid fa-gauge text-orange-500"></i>
-                    <span>Liftler</span>
-                </a>
-
-                <a href="/arsiv" class="text-sm font-medium text-slate-300 hover:text-white transition-colors flex items-center gap-2">
-                    <i class="fa-solid fa-box-archive text-amber-500"></i>
-                    <span>Arşiv</span>
-                </a>
-
-                <div class="h-4 w-px bg-slate-800"></div>
-
-                <div class="flex items-center gap-3">
-                    <div class="hidden sm:block text-right">
-                        <div class="text-sm font-semibold text-white"><%= currentWorkshop.workshop_name %></div>
-                        <div class="text-xs text-slate-400"><%= currentWorkshop.owner_name %></div>
-                    </div>
-                    <a href="/logout" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-slate-700 hover:border-rose-500/30 transition-all flex items-center gap-1.5" title="Çıkış Yap">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                        <span class="hidden sm:inline">Çıkış</span>
-                    </a>
+        <!-- Logo ve Ana Sayfa Linki -->
+        <div class="flex items-center gap-8">
+            <a href="/" class="font-display font-extrabold text-xl tracking-tight text-black flex items-center gap-2.5 group">
+                <div class="w-7 h-7 rounded-lg bg-gradient-to-b from-sky-400 to-sky-600 shadow-sm flex items-center justify-center text-white text-xs group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-car-side"></i>
                 </div>
+                <span>Oto<span class="text-sky-600">Takip</span></span>
+            </a>
+            
+            <!-- Masaüstü Navigasyon -->
+            <nav class="hidden md:flex items-center gap-1.5">
+                <% if (typeof currentWorkshop !== 'undefined' && currentWorkshop) { %>
+                    <a href="/dashboard" class="px-4 py-2 text-sm font-semibold text-gray-700 hover:text-black hover:bg-white/70 rounded-xl transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-gauge-high text-xs text-sky-600"></i>
+                        <span>Lift Panosu</span>
+                    </a>
+                    <a href="/arsiv" class="px-4 py-2 text-sm font-semibold text-gray-700 hover:text-black hover:bg-white/70 rounded-xl transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-box-archive text-xs text-amber-600"></i>
+                        <span>Arşiv</span>
+                    </a>
+                <% } else { %>
+                    <a href="/" class="px-4 py-2 text-sm font-semibold text-black bg-white/70 rounded-xl shadow-xs transition-all">Genel Bakış</a>
+                    <a href="/login" class="px-4 py-2 text-sm font-semibold text-gray-500 hover:text-black rounded-xl transition-all">Usta Masası</a>
+                <% } %>
+            </nav>
+        </div>
+        
+        <!-- Sağ Menü / Oturum Durumu -->
+        <div class="flex items-center gap-3 sm:gap-4">
+            <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200/60 shadow-xs">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Gateway Online
+            </span>
+
+            <% if (typeof currentWorkshop !== 'undefined' && currentWorkshop) { %>
+                <div class="hidden lg:block text-right pr-1">
+                    <div class="text-xs font-bold text-gray-900 leading-tight"><%= currentWorkshop.workshop_name %></div>
+                    <div class="text-[10px] text-gray-400 font-medium"><%= currentWorkshop.owner_name %></div>
+                </div>
+
+                <a href="/logout" class="text-xs sm:text-sm font-semibold text-gray-700 hover:text-rose-600 bg-white/80 hover:bg-white border border-gray-200 hover:border-rose-200 px-3.5 py-1.5 rounded-xl transition-all shadow-xs flex items-center gap-1.5" title="Güvenli Çıkış">
+                    <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                    <span class="hidden sm:inline">Çıkış</span>
+                </a>
             <% } else { %>
-                <!-- Giriş Yapmamış Ziyaretçi -->
-                <a href="/login" class="text-sm font-semibold text-slate-300 hover:text-white transition-colors">Usta Girişi</a>
-                <a href="/register" class="px-4 py-2 text-sm font-semibold rounded-xl bg-orange-600 hover:bg-orange-500 text-white shadow-lg shadow-orange-600/30 transition-all">
-                    Servis Kaydı Aç
+                <a href="/login" class="text-xs sm:text-sm font-semibold text-gray-700 hover:text-black bg-white/80 hover:bg-white border border-gray-200 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl transition-all shadow-xs">
+                    Usta Girişi
+                </a>
+                <a href="/register" class="btn-elegant !py-1.5 sm:!py-2 !px-3.5 sm:!px-5 text-xs sm:text-sm shadow-sm">
+                    Servis Aç
                 </a>
             <% } %>
         </div>
-
+    </header>
+    
+    <!-- Mobil Yatay Sekmeler -->
+    <div class="md:hidden mt-2">
+        <nav class="nav-glass rounded-xl flex overflow-x-auto hide-scrollbar p-1.5 gap-1 shadow-xs">
+            <% if (typeof currentWorkshop !== 'undefined' && currentWorkshop) { %>
+                <a href="/dashboard" class="whitespace-nowrap px-3.5 py-1.5 text-xs font-semibold text-black bg-white rounded-lg shadow-xs flex items-center gap-1.5">
+                    <i class="fa-solid fa-gauge-high text-xs text-sky-600"></i>
+                    Liftler
+                </a>
+                <a href="/arsiv" class="whitespace-nowrap px-3.5 py-1.5 text-xs font-semibold text-gray-600 hover:text-black flex items-center gap-1.5">
+                    <i class="fa-solid fa-box-archive text-xs text-amber-600"></i>
+                    Arşiv
+                </a>
+            <% } else { %>
+                <a href="/" class="whitespace-nowrap px-3.5 py-1.5 text-xs font-semibold text-black bg-white rounded-lg shadow-xs">Genel Bakış</a>
+                <a href="/login" class="whitespace-nowrap px-3.5 py-1.5 text-xs font-semibold text-gray-500">Usta Girişi</a>
+                <a href="/register" class="whitespace-nowrap px-3.5 py-1.5 text-xs font-semibold text-gray-500">Servis Aç</a>
+            <% } %>
+        </nav>
     </div>
-</header>
+</div>

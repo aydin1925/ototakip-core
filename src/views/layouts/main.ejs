@@ -1,48 +1,154 @@
 <!DOCTYPE html>
-<html lang="tr" class="h-full bg-slate-950 text-slate-100">
+<html lang="tr" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= typeof title !== 'undefined' ? title : 'OtoTakip' %></title>
+    <title><%= typeof title !== 'undefined' ? title : 'OtoTakip — Akıllı Servis Yönetimi' %></title>
     
     <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter (Metin), Manrope (Başlık), JetBrains Mono (Plaka/Rakam) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- SweetAlert2 (Açık ve Modern Tema) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        display: ['Manrope', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
                     colors: {
                         brand: {
-                            500: '#f97316',
-                            600: '#ea580c',
-                            700: '#c2410c'
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1'
                         }
                     }
-                }
-            }
+                },
+            },
         }
     </script>
-    
-    <!-- Font Awesome İkonları -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- SweetAlert2 + Koyu (Dark) Tema -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@5/dark.css">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #fafafa; 
+            background-image: 
+                radial-gradient(circle at 10% 0%, rgba(14, 165, 233, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 90% 15%, rgba(34, 197, 94, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 50% 100%, rgba(14, 165, 233, 0.04) 0%, transparent 60%),
+                radial-gradient(#e5e7eb 1.2px, transparent 1.2px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px;
+            color: #111827; 
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Cam Menü & Kartlar */
+        .nav-glass {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 1);
+        }
+
+        .btn-elegant {
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+            color: #ffffff;
+            padding: 12px 28px;
+            border-radius: 999px;
+            font-weight: 600;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 14px rgba(0,0,0,0.12);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-elegant:hover {
+            transform: translateY(-1px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 6px 20px rgba(0,0,0,0.18);
+        }
+
+        .car-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03), inset 0 1px 0 #ffffff;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Türk Plaka Tasarımı */
+        .plate { 
+            border: 1px solid rgba(0,0,0,0.12); 
+            border-radius: 6px; 
+            display: inline-flex; 
+            background: #fff; 
+            overflow: hidden; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .plate-tr { 
+            background: #0284c7; 
+            color: #fff; 
+            padding: 2px 5px; 
+            font-size: 9px; 
+            font-weight: 800;
+            font-family: sans-serif;
+            display: flex;
+            align-items: center;
+        }
+        .plate-num { 
+            padding: 2px 7px; 
+            font-size: 13px; 
+            font-family: 'JetBrains Mono', monospace; 
+            font-weight: 800;
+            color: #111827; 
+        }
+        
+        /* Durum Rozetleri */
+        .badge { 
+            display: inline-flex; 
+            align-items: center; 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            font-weight: 600; 
+        }
+        .badge-amber { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        .badge-blue { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .badge-green { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+        
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
-<body class="min-h-full flex flex-col font-sans antialiased selection:bg-orange-500 selection:text-white">
+<body class="min-h-screen flex flex-col antialiased">
 
     <!-- Üst Menü / Navbar -->
     <%- include('../partials/navbar') %>
 
-    <!-- Sayfa İçeriği Buraya Enjekte Edilir -->
-    <main class="flex-1">
+    <!-- Sayfa İçeriği -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         <%- body %>
     </main>
 
-    <!-- SweetAlert2 Global Yardımcıları (Toast ve Onay Pencereleri) -->
+    <!-- SweetAlert2 Global Yardımcıları (Modern ve Açık Tema) -->
     <script>
-        // 1. Sağ üstten kayan zarif Toast bildirimi
         window.toast = function(title, icon = 'success') {
             Swal.fire({
                 toast: true,
@@ -52,29 +158,36 @@
                 showConfirmButton: false,
                 timer: 3500,
                 timerProgressBar: true,
-                background: '#0f172a',
-                color: '#f8fafc'
+                background: '#ffffff',
+                color: '#111827',
+                customClass: {
+                    popup: 'border border-gray-200 shadow-xl rounded-2xl text-xs font-semibold'
+                }
             });
         };
 
-        // 2. Kritik aksiyonlar için onay penceresi (örn: Aracı teslim etme)
         window.confirmModal = async function(title, text, confirmBtnText = 'Evet, Devam Et') {
             return Swal.fire({
                 title: title,
                 text: text,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#ea580c',
-                cancelButtonColor: '#334155',
+                confirmButtonColor: '#111827',
+                cancelButtonColor: '#e5e7eb',
                 confirmButtonText: confirmBtnText,
                 cancelButtonText: 'Vazgeç',
-                background: '#0f172a',
-                color: '#f8fafc'
+                background: '#ffffff',
+                color: '#111827',
+                customClass: {
+                    popup: 'border border-gray-200 shadow-2xl rounded-3xl',
+                    cancelButton: '!text-gray-700 !font-semibold !rounded-xl',
+                    confirmButton: '!rounded-xl !font-bold'
+                }
             });
         };
     </script>
 
-    <!-- Canlı SSE Dinleyicisi (WhatsApp bildirimleri geldiğinde window.toast tetikler) -->
+    <!-- Canlı SSE Dinleyicisi (WhatsApp bildirimleri geldiğinde otomatik tetikler) -->
     <script src="/js/live-stream.js"></script>
 </body>
 </html>

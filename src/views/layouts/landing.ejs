@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="tr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'OtoTakip — Akıllı Servis Yönetimi' %></title>
+    
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: DM Serif Display (Başlık), Inter (Gövde & Kart), JetBrains Mono (Plaka/Rakam) -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                        display: ['"DM Serif Display"', 'Georgia', 'serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    }
+                },
+            },
+        }
+    </script>
+
+    <style>
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background-color: #090b10; 
+            color: #f8fafc; 
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* KART İÇERİĞİ KESİNLİKLE NET VE SADE "INTER" KALACAK */
+        #card-variant-station-dark, 
+        #card-variant-station-dark * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        }
+        #card-variant-station-dark .plate-num,
+        #card-variant-station-dark .font-mono,
+        #card-variant-station-dark [class*="font-mono"] {
+            font-family: 'JetBrains Mono', monospace !important;
+        }
+
+        /* Türk Plaka Tasarımı */
+        .plate { 
+            border: 1px solid rgba(0,0,0,0.12); 
+            border-radius: 6px; 
+            display: inline-flex; 
+            background: #fff; 
+            overflow: hidden; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .plate-tr { 
+            background: #0284c7; 
+            color: #fff; 
+            padding: 2px 5px; 
+            font-size: 9px; 
+            font-weight: 800;
+            font-family: sans-serif;
+            display: flex;
+            align-items: center;
+        }
+        .plate-num { 
+            padding: 2px 7px; 
+            font-size: 13px; 
+            font-family: 'JetBrains Mono', monospace !important; 
+            font-weight: 800;
+            color: #111827; 
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative overflow-x-hidden bg-[#090b10] text-slate-100 antialiased selection:bg-white selection:text-black">
+
+    <%- body %>
+
+</body>
+</html>

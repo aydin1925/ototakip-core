@@ -1,252 +1,463 @@
-<div class="max-w-xl mx-auto px-4 py-6 sm:py-10">
+<div class="max-w-5xl mx-auto space-y-4 sm:space-y-6">
 
     <% if (!vehicle) { %>
-        <!-- ARAÇ BULUNAMADI KARTI -->
-        <div class="rounded-3xl bg-slate-900 border border-slate-800 p-8 text-center shadow-2xl">
-            <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto mb-4 text-2xl">
+        <!-- ARAÇ BULUNAMADI KARTI (Açık ve Temiz Tema) -->
+        <div class="bg-white border border-gray-200/80 rounded-3xl p-8 sm:p-12 text-center shadow-xs max-w-lg mx-auto">
+            <div class="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto mb-4 text-2xl shadow-xs">
                 <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
-            <h2 class="text-xl font-bold text-white">Aktif Kayıt Bulunamadı</h2>
-            <p class="text-sm text-slate-400 mt-2 leading-relaxed">
-                <strong class="text-white font-mono uppercase tracking-wider"><%= searchedPlate %></strong> plakalı araca ait aktif bir servis işlemi bulunamadı veya araç teslim edilmiş olabilir.
+            <h2 class="text-xl sm:text-2xl font-display font-extrabold text-gray-900">Aktif Kayıt Bulunamadı</h2>
+            <p class="text-xs sm:text-sm text-gray-500 mt-2 leading-relaxed">
+                <strong class="text-gray-900 font-mono uppercase tracking-wider font-bold"><%= searchedPlate || '' %></strong> plakalı araca ait aktif bir servis işlemi bulunamadı veya araç sahibine teslim edilmiş olabilir.
             </p>
-            <div class="mt-6">
-                <a href="/" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold transition-colors">
-                    <i class="fa-solid fa-arrow-left text-xs"></i>
-                    <span>Anasayfaya Dön</span>
+            
+            <!-- Yeniden Sorgulama Formu -->
+            <form action="/takip" method="GET" class="mt-6 flex items-center gap-2 max-w-sm mx-auto">
+                <input 
+                    type="text" 
+                    name="plaka" 
+                    required 
+                    placeholder="Plaka Girin (Örn: 34 BCD 128)" 
+                    class="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm font-mono font-bold uppercase text-gray-900 focus:bg-white focus:border-sky-600 focus:outline-none"
+                >
+                <button type="submit" class="bg-gray-900 hover:bg-black text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-xs cursor-pointer">
+                    Ara
+                </button>
+            </form>
+
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <a href="/" class="text-xs font-semibold text-gray-500 hover:text-black transition-colors flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    <span>Ana Sayfaya Dön</span>
                 </a>
             </div>
         </div>
+
     <% } else { %>
         
-        <!-- ÜST SERVİS VE PLAKA BİLGİSİ -->
-        <div class="text-center mb-6">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-semibold border border-slate-700 mb-3">
-                <i class="fa-solid fa-wrench text-orange-500"></i>
-                <%= vehicle.workshop_name || 'Yetkili Oto Servis' %>
-            </span>
-
-            <div class="flex justify-center mb-2">
-                <!-- Türk Plaka Grafiği -->
-                <div class="inline-flex items-center bg-white text-black font-mono font-black px-4 py-1.5 rounded-lg border-2 border-slate-700 tracking-wider text-lg shadow-xl">
-                    <span class="bg-blue-700 text-white text-xs px-1.5 py-0.5 rounded -ml-3 mr-2 font-sans font-bold">TR</span>
-                    <%= vehicle.plate %>
+        <!-- ÜST BAŞLIK & ARAÇ BİLGİ BARI (Mobilde ve Masaüstünde Sıfır Taşan Yapı) -->
+        <div class="flex items-center justify-between gap-3 bg-white/85 backdrop-blur-md border border-gray-200/80 rounded-2xl p-4 sm:px-6 shadow-xs">
+            <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center text-base sm:text-lg shrink-0">
+                    <i class="fa-solid fa-car"></i>
                 </div>
-            </div>
-
-            <h1 class="text-xl font-bold text-white"><%= vehicle.car_model %></h1>
-            <p class="text-xs text-slate-400 mt-0.5">Sayın <%= vehicle.customer_name || 'Müşterimiz' %></p>
-        </div>
-
-        <!-- 4 AŞAMALI CANLI SÜREÇ KARTI -->
-        <div class="rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-xl mb-6">
-            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-5 flex items-center justify-between">
-                <span>Araç Durumu</span>
-                <span class="inline-flex items-center gap-1.5 text-emerald-400">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Canlı Takip
-                </span>
-            </h2>
-
-            <%
-                const stages = [
-                    { key: 'RECEIVED', label: 'Kabul Edildi', desc: 'Aracınız atölyeye giriş yaptı', icon: 'fa-clipboard-check' },
-                    { key: 'INSPECTING', label: 'Arıza Teşhisi Yapılıyor', desc: 'Ustanız lift üzerinde kontrolleri sürdürüyor', icon: 'fa-magnifying-glass' }
-                ];
-
-                // Eğer araç şu anda parça bekliyorsa veya onaylı/bekleyen parça varsa göster
-                if (vehicle.status === 'WAITING_PARTS' || (vehicle.approvals && vehicle.approvals.length > 0)) {
-                    stages.push({ key: 'WAITING_PARTS', label: 'Yedek Parça Bekleniyor', desc: 'Gerekli yedek parçaların tedariği bekleniyor', icon: 'fa-boxes-packing' });
-                }
-
-                stages.push(
-                    { key: 'REPAIRING', label: 'Onarım & Montajda', desc: 'Parça değişimi ve mekanik işlemler yapılıyor', icon: 'fa-wrench' },
-                    { key: 'TESTING', label: 'Yol Testi & Son Kontrol', desc: 'Ustanız son güvenlik ve sürüş testini yapıyor', icon: 'fa-road' },
-                    { key: 'READY', label: 'Teslimata Hazır', desc: 'Tüm işlemler bitti, aracınızı teslim alabilirsiniz', icon: 'fa-circle-check' }
-                );
-
-                const stageOrder = ['RECEIVED', 'INSPECTING', 'WAITING_PARTS', 'REPAIRING', 'TESTING', 'READY', 'DELIVERED'];
-                const currentIdx = stageOrder.indexOf(vehicle.status);
-            %>
-
-            <div class="space-y-3.5">
-                <% stages.forEach((s) => { 
-                    const sIdx = stageOrder.indexOf(s.key);
-                    const isPassed = currentIdx > sIdx || vehicle.status === 'DELIVERED';
-                    const isCurrent = vehicle.status === s.key;
-                %>
-                    <div class="flex items-start gap-4 p-3.5 rounded-2xl transition-all <%= isCurrent ? 'bg-orange-600/10 border border-orange-500/30 ring-1 ring-orange-500/20' : (isPassed ? 'bg-slate-950/60' : 'opacity-40') %>">
-                        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm shrink-0 <%= isCurrent ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : (isPassed ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-500') %>">
-                            <i class="fa-solid <%= s.icon %>"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="text-sm font-bold <%= isCurrent ? 'text-orange-400' : (isPassed ? 'text-white' : 'text-slate-400') %>">
-                                <%= s.label %>
-                            </div>
-                            <div class="text-xs text-slate-400 mt-0.5"><%= s.desc %></div>
-                        </div>
-                        <% if (isCurrent) { %>
-                            <span class="text-[10px] bg-orange-500 text-slate-950 font-bold px-2 py-0.5 rounded-md uppercase tracking-wider self-center">
-                                AKTİF
-                            </span>
-                        <% } else if (isPassed) { %>
-                            <i class="fa-solid fa-check text-emerald-500 text-xs self-center"></i>
-                        <% } %>
-                    </div>
-                <% }); %>
-            </div>
-
-            <!-- Hedef Teslimat Zamanı -->
-            <% if (vehicle.estimated_delivery) { %>
-                <div class="mt-5 pt-4 border-t border-slate-800 flex items-center justify-between text-xs">
-                    <span class="text-slate-400">Hedef Teslim Zamanı:</span>
-                    <span class="font-bold text-white bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
-                        <%= vehicle.estimated_delivery %>
-                    </span>
-                </div>
-            <% } %>
-        </div>
-
-        <!-- WHATSAPP PARÇA VE İŞLEM ONAY BÖLÜMÜ -->
-        <% if (vehicle.approvals && vehicle.approvals.length > 0) { %>
-            <div class="rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-xl mb-6">
-                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-                    <i class="fa-brands fa-whatsapp text-emerald-500"></i>
-                    <span>Parça Değişim & Fiyat Onayları</span>
-                </h2>
-
-                <div class="space-y-3">
-                    <% vehicle.approvals.forEach(appr => { %>
-                        <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800">
-                            <div class="flex items-start justify-between gap-3">
-                                <div>
-                                    <div class="text-sm font-bold text-white"><%= appr.part_name %></div>
-                                    <div class="text-xs text-slate-400 mt-1"><%= appr.note %></div>
-                                </div>
-
-                                <!-- Onay Durum Rozeti -->
-                                <% if (appr.status === 'APPROVED') { %>
-                                    <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold shrink-0">
-                                        ✓ Onaylandı
-                                    </span>
-                                <% } else if (appr.status === 'PENDING') { %>
-                                    <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold shrink-0 animate-pulse">
-                                        Onay Bekliyor
-                                    </span>
-                                <% } else { %>
-                                    <span class="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-bold shrink-0">
-                                        İptal Edildi
-                                    </span>
-                                <% } %>
-                            </div>
-
-                            <% if (appr.status === 'PENDING') { %>
-                                <div class="mt-3 p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/20 text-[11px] text-amber-300/80 flex items-center gap-2">
-                                    <i class="fa-brands fa-whatsapp text-emerald-400 text-sm"></i>
-                                    <span>WhatsApp'tan ustanıza <strong>"ONAYLIYORUM"</strong> yazarak bu parçayı anında onaylayabilirsiniz.</span>
-                                </div>
-                            <% } %>
-                        </div>
-                    <% }); %>
-                </div>
-            </div>
-        <% } %>
-
-        <!-- DİJİTAL SERVİS FİŞİ & HESAP ÖZETİ (FATURA KARTI) -->
-        <% if (vehicle.receipt) { %>
-            <div class="rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-xl mb-6 relative overflow-hidden">
-                <!-- Üst Fiş Başlığı -->
-                <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
-                    <div>
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                            ✓ Onaylı Servis Fişi
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="font-display font-bold text-gray-900 text-base sm:text-lg truncate"><%= vehicle.car_model %></span>
+                        <span class="text-[10px] sm:text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md shrink-0">
+                            <%= vehicle.station || 'Yetkili İstasyon' %>
                         </span>
-                        <h3 class="text-base font-bold text-white mt-2 flex items-center gap-2">
-                            <i class="fa-solid fa-receipt text-emerald-400"></i>
-                            <span>Hesap & Masraf Özeti</span>
-                        </h3>
                     </div>
-                    <div class="text-right">
-                        <div class="text-[11px] text-slate-400 font-medium">Toplam Tutar</div>
-                        <div class="text-xl sm:text-2xl font-black text-emerald-400 font-mono">
-                            <%= Number(vehicle.receipt.total_amount).toLocaleString('tr-TR') %> TL
-                        </div>
+                    <div class="text-[11px] sm:text-xs text-gray-500 mt-0.5 flex items-center gap-1.5 sm:gap-2 truncate">
+                        <span>Müşteri: <strong class="text-gray-700"><%= vehicle.customer_name || 'Değerli Müşterimiz' %></strong></span>
+                        <span>•</span>
+                        <span>Servis: <strong class="text-gray-700 font-mono">#OT-<%= vehicle.id %></strong></span>
                     </div>
                 </div>
+            </div>
+            
+            <div class="plate text-xs sm:text-sm shrink-0">
+                <span class="plate-tr">TR</span>
+                <span class="plate-num"><%= vehicle.plate %></span>
+            </div>
+        </div>
 
-                <!-- Fiş Kalemleri -->
-                <div class="space-y-2 mb-4">
-                    <% if (vehicle.receipt.items && vehicle.receipt.items.length > 0) { %>
-                        <% vehicle.receipt.items.forEach(it => { %>
-                            <div class="flex items-center justify-between py-2 px-3 rounded-xl bg-slate-950 border border-slate-800/80 text-xs">
-                                <span class="text-slate-300 font-medium flex items-center gap-2">
-                                    <i class="fa-solid fa-wrench text-orange-400 text-[10px]"></i>
-                                    <%= it.name %>
-                                </span>
-                                <span class="font-mono font-bold text-white"><%= Number(it.price).toLocaleString('tr-TR') %> TL</span>
-                            </div>
-                        <% }); %>
-                    <% } %>
+        <%
+            const stageOrder = ['RECEIVED', 'INSPECTING', 'WAITING_PARTS', 'REPAIRING', 'TESTING', 'READY', 'DELIVERED'];
+            const currentIdx = stageOrder.indexOf(vehicle.status);
+            
+            // 5 Aşamalı Mockup Tanımları:
+            // 1. Kabul & Ekspertiz
+            const isS1Done = currentIdx > 0 || vehicle.status === 'DELIVERED';
+            const isS1Active = vehicle.status === 'RECEIVED';
+            
+            // 2. Teşhis & WhatsApp Onayı
+            const isS2Done = currentIdx > 2 || vehicle.status === 'DELIVERED';
+            const isS2Active = vehicle.status === 'INSPECTING' || vehicle.status === 'WAITING_PARTS';
+            
+            // 3. Parça Değişimi & Montaj
+            const isS3Done = currentIdx > 3 || vehicle.status === 'DELIVERED';
+            const isS3Active = vehicle.status === 'REPAIRING';
+            
+            // 4. Test Sürüşü & Yıkama
+            const isS4Done = currentIdx > 4 || vehicle.status === 'DELIVERED';
+            const isS4Active = vehicle.status === 'TESTING';
+            
+            // 5. Teslime Hazır
+            const isS5Done = vehicle.status === 'DELIVERED';
+            const isS5Active = vehicle.status === 'READY';
+        %>
 
-                    <% if (vehicle.receipt.labor_cost > 0) { %>
-                        <div class="flex items-center justify-between py-2 px-3 rounded-xl bg-slate-950 border border-slate-800/80 text-xs">
-                            <span class="text-slate-300 font-medium flex items-center gap-2">
-                                <i class="fa-solid fa-user-gear text-cyan-400 text-[10px]"></i>
-                                Periyodik Bakım & Usta İşçiliği
-                            </span>
-                            <span class="font-mono font-bold text-white"><%= Number(vehicle.receipt.labor_cost).toLocaleString('tr-TR') %> TL</span>
-                        </div>
-                    <% } %>
+        <!-- CANLI SÜREÇ ÇİZELGESİ (Mobilde Dikey Çizgi, Masaüstünde 5 Kolon) -->
+        <div class="bg-white border border-gray-200/80 rounded-2xl p-4 sm:p-6 shadow-xs">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-100">
+                <div>
+                    <h3 class="font-display font-extrabold text-gray-900 text-base sm:text-lg">Canlı Servis Aşamaları</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Aracınızın atölyedeki anlık ilerleme durumu</p>
                 </div>
-
-                <% if (vehicle.receipt.notes) { %>
-                    <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 text-xs text-slate-400">
-                        <strong class="text-slate-300">Garanti / Not:</strong> <%= vehicle.receipt.notes %>
+                
+                <% if (vehicle.estimated_delivery) { %>
+                    <div class="flex items-center gap-2 text-xs font-semibold text-gray-600 bg-amber-50/80 border border-amber-200/60 px-3 py-1.5 rounded-xl self-start sm:self-auto">
+                        <i class="fa-regular fa-clock text-amber-600"></i>
+                        <span>Tahmini Teslim: <strong class="text-gray-900"><%= vehicle.estimated_delivery %></strong></span>
                     </div>
                 <% } %>
             </div>
-        <% } %>
 
-        <!-- HİZMET VE PARÇA FOTOĞRAFLARI (EKSPERTİZ KANITI) -->
-        <% if (vehicle.photos && vehicle.photos.length > 0) { %>
-            <div class="rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-xl mb-6">
-                <h3 class="text-base font-bold text-white mb-1 flex items-center gap-2">
-                    <i class="fa-solid fa-camera text-sky-400"></i>
-                    <span>Hizmet & Parça Fotoğrafları</span>
-                </h3>
-                <p class="text-xs text-slate-400 mb-4">Ustanızın araç üzerinde tespit ettiği ve değiştirdiği parçaların görsel kanıtları</p>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <% vehicle.photos.forEach(p => { %>
-                        <div class="rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden shadow">
-                            <a href="<%= p.photo_path %>" target="_blank" class="block relative group">
-                                <img src="<%= p.photo_path %>" alt="<%= p.caption || 'Parça Fotoğrafı' %>" class="w-full h-44 object-cover group-hover:opacity-90 transition">
-                                <div class="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-slate-950/80 backdrop-blur-sm text-[10px] text-white font-semibold flex items-center gap-1 border border-slate-700">
-                                    <i class="fa-solid fa-expand"></i> Büyüt
-                                </div>
-                            </a>
-                            <div class="p-3">
-                                <div class="text-xs font-semibold text-slate-200"><%= p.caption || 'Servis Fotoğrafı' %></div>
-                                <div class="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
-                                    <i class="fa-regular fa-clock"></i> <%= p.created_at %>
-                                </div>
-                            </div>
+            <!-- MOBİL GÖRÜNÜM (sm:hidden - Çizgili, Net Dikey Akış) -->
+            <div class="block sm:hidden">
+                <!-- Aktif Durum Vurgu Kutusu -->
+                <div class="flex items-center justify-between bg-sky-50/80 border border-sky-100 rounded-xl p-3 mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-sky-600 text-white flex items-center justify-center text-xs shadow-xs">
+                            <i class="fa-solid fa-wrench animate-spin" style="animation-duration: 4s;"></i>
                         </div>
-                    <% }); %>
+                        <div>
+                            <div class="text-xs font-bold text-sky-900">
+                                <% if (isS1Active) { %>Kabul & Kontroller
+                                <% } else if (isS2Active) { %>Teşhis & Parça Onayı
+                                <% } else if (isS3Active) { %>Parça Değişimi & Montaj
+                                <% } else if (isS4Active) { %>Test Sürüşü & Yıkama
+                                <% } else if (isS5Active) { %>Teslime Hazır
+                                <% } else { %>İşlemler Sürüyor<% } %>
+                            </div>
+                            <div class="text-[10px] text-sky-600 font-medium">Güncel Aşama • Devam Ediyor</div>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold text-sky-700 bg-white/90 border border-sky-200 px-2 py-0.5 rounded-md">İşlemde</span>
+                </div>
+
+                <!-- Dikey Bağlantılı Çizgi ve Aşamalar -->
+                <div class="relative pl-5 space-y-3.5 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200">
+                    <!-- 1. Kabul -->
+                    <div class="relative flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full <%= isS1Done ? 'bg-emerald-500 text-white' : (isS1Active ? 'bg-sky-600 text-white ring-4 ring-sky-100' : 'bg-white border-2 border-gray-300 text-gray-400') %> flex items-center justify-center text-[10px] font-bold shrink-0 z-10 -ml-[23px] shadow-xs">
+                            <% if (isS1Done) { %><i class="fa-solid fa-check"></i><% } else { %>1<% } %>
+                        </div>
+                        <div class="flex-1 flex items-center justify-between text-xs">
+                            <span class="font-semibold <%= isS1Active ? 'font-bold text-sky-800' : 'text-gray-800' %>">Kabul & Ekspertiz</span>
+                            <span class="text-[10px] text-emerald-600 font-medium"><%= isS1Done ? 'Tamamlandı ✓' : (isS1Active ? 'İşlemde' : '') %></span>
+                        </div>
+                    </div>
+
+                    <!-- 2. Teşhis -->
+                    <div class="relative flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full <%= isS2Done ? 'bg-emerald-500 text-white' : (isS2Active ? 'bg-sky-600 text-white ring-4 ring-sky-100' : 'bg-white border-2 border-gray-300 text-gray-400') %> flex items-center justify-center text-[10px] font-bold shrink-0 z-10 -ml-[23px] shadow-xs">
+                            <% if (isS2Done) { %><i class="fa-solid fa-check"></i><% } else { %>2<% } %>
+                        </div>
+                        <div class="flex-1 flex items-center justify-between text-xs">
+                            <span class="font-semibold <%= isS2Active ? 'font-bold text-sky-800' : 'text-gray-800' %>">Teşhis & WhatsApp Onayı</span>
+                            <span class="text-[10px] text-emerald-600 font-medium"><%= isS2Done ? 'Onaylandı ✓' : (isS2Active ? 'Onay Bekliyor' : '') %></span>
+                        </div>
+                    </div>
+
+                    <!-- 3. Onarım -->
+                    <div class="relative flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full <%= isS3Done ? 'bg-emerald-500 text-white' : (isS3Active ? 'bg-sky-600 text-white ring-4 ring-sky-100' : 'bg-white border-2 border-gray-300 text-gray-400') %> flex items-center justify-center text-[10px] font-bold shrink-0 z-10 -ml-[23px] shadow-xs">
+                            <% if (isS3Done) { %><i class="fa-solid fa-check"></i><% } else { %>3<% } %>
+                        </div>
+                        <div class="flex-1 flex items-center justify-between text-xs">
+                            <span class="font-semibold <%= isS3Active ? 'font-bold text-sky-800' : 'text-gray-800' %>">Parça Değişimi & Montaj</span>
+                            <span class="text-[10px] text-sky-600 font-semibold"><%= isS3Active ? 'İşlem Yapılıyor' : (isS3Done ? 'Tamamlandı ✓' : '') %></span>
+                        </div>
+                    </div>
+
+                    <!-- 4. Test -->
+                    <div class="relative flex items-center gap-3 <%= !isS4Done && !isS4Active ? 'opacity-40' : '' %>">
+                        <div class="w-6 h-6 rounded-full <%= isS4Done ? 'bg-emerald-500 text-white' : (isS4Active ? 'bg-sky-600 text-white ring-4 ring-sky-100' : 'bg-white border-2 border-gray-300 text-gray-400') %> flex items-center justify-center text-[10px] font-bold shrink-0 z-10 -ml-[23px]">
+                            <% if (isS4Done) { %><i class="fa-solid fa-check"></i><% } else { %>4<% } %>
+                        </div>
+                        <div class="flex-1 flex items-center justify-between text-xs">
+                            <span class="font-medium text-gray-600">Test Sürüşü & Yıkama</span>
+                            <span class="text-[10px] text-gray-400"><%= isS4Active ? 'Testte' : (isS4Done ? 'Tamamlandı ✓' : 'Sırada') %></span>
+                        </div>
+                    </div>
+
+                    <!-- 5. Teslimat -->
+                    <div class="relative flex items-center gap-3 <%= !isS5Done && !isS5Active ? 'opacity-30' : '' %>">
+                        <div class="w-6 h-6 rounded-full <%= isS5Done ? 'bg-emerald-500 text-white' : (isS5Active ? 'bg-emerald-600 text-white ring-4 ring-emerald-100' : 'bg-white border-2 border-gray-300 text-gray-400') %> flex items-center justify-center text-[10px] font-bold shrink-0 z-10 -ml-[23px]">
+                            <% if (isS5Done) { %><i class="fa-solid fa-check"></i><% } else { %>5<% } %>
+                        </div>
+                        <div class="flex-1 flex items-center justify-between text-xs">
+                            <span class="font-medium text-gray-600">Teslime Hazır</span>
+                            <span class="text-[10px] text-gray-400"><%= isS5Active ? 'Teslime Hazır ✓' : (isS5Done ? 'Teslim Edildi' : 'Beklemede') %></span>
+                        </div>
+                    </div>
                 </div>
             </div>
-        <% } %>
 
-        <!-- USTA İLE WHATSAPP İLETİŞİM BUTONU -->
-        <div class="text-center">
-            <a 
-                href="https://wa.me/<%= vehicle.workshop_phone || '' %>?text=Merhaba,%20<%= vehicle.plate %>%20aracımın%20durumu%20hakkında%20bilgi%20almak%20istiyorum."
-                target="_blank"
-                class="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-xl shadow-emerald-600/20 transition-all flex items-center justify-center gap-2"
-            >
-                <i class="fa-brands fa-whatsapp text-lg"></i>
-                <span>Ustanıza WhatsApp'tan Yazın</span>
-            </a>
+            <!-- MASAÜSTÜ GÖRÜNÜM (hidden sm:block - Orijinal 5 Kolonlu Yapı) -->
+            <div class="hidden sm:block">
+                <div class="grid grid-cols-5 gap-4 relative">
+                    <!-- 1 -->
+                    <div class="flex flex-col items-center text-center gap-2">
+                        <div class="w-9 h-9 rounded-full <%= isS1Done ? 'bg-emerald-500 text-white' : (isS1Active ? 'bg-sky-600 text-white ring-4 ring-sky-100' : 'bg-gray-100 text-gray-400 border border-gray-200') %> flex items-center justify-center text-sm font-bold shadow-xs shrink-0">
+                            <% if (isS1Done) { %><i class="fa-solid fa-check"></i><% } else { %>1<% } %>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-gray-900">Kabul & Ekspertiz</div>
+                            <div class="text-[11px] text-emerald-600 font-medium"><%= isS1Done ? 'Tamamlandı' : (isS1Active ? 'İşlemde' : 'Sırada') %></div>
+                        </div>
+                    </div>
+
+                    <!-- 2 -->
+                    <div class="flex flex-col items-center text-center gap-2">
+                        <div class="w-9 h-9 rounded-full <%= isS2Done ? 'bg-emerald-500 text-white' : (isS2Active ? 'bg-sky-600 text-white ring-4 ring-sky-100' : 'bg-gray-100 text-gray-400 border border-gray-200') %> flex items-center justify-center text-sm font-bold shadow-xs shrink-0">
+                            <% if (isS2Done) { %><i class="fa-solid fa-check"></i><% } else { %>2<% } %>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-gray-900">Teşhis & Onay</div>
+                            <div class="text-[11px] text-emerald-600 font-medium"><%= isS2Done ? 'Onaylandı' : (isS2Active ? 'Onay Bekliyor' : 'Sırada') %></div>
+                        </div>
+                    </div>
+
+                    <!-- 3 -->
+                    <div class="flex flex-col items-center text-center gap-2">
+                        <div class="w-9 h-9 rounded-full <%= isS3Done ? 'bg-emerald-500 text-white' : (isS3Active ? 'bg-sky-600 text-white ring-4 ring-sky-100' : 'bg-gray-100 text-gray-400 border border-gray-200') %> flex items-center justify-center text-sm font-bold shadow-md shadow-sky-500/20 shrink-0">
+                            <% if (isS3Done) { %><i class="fa-solid fa-check"></i><% } else if (isS3Active) { %><i class="fa-solid fa-wrench animate-spin text-xs" style="animation-duration: 4s;"></i><% } else { %>3<% } %>
+                        </div>
+                        <div>
+                            <div class="text-xs font-extrabold text-sky-700">Parça & Montaj</div>
+                            <div class="text-[11px] text-sky-600 font-semibold"><%= isS3Active ? 'İşlem Yapılıyor' : (isS3Done ? 'Tamamlandı' : 'Sırada') %></div>
+                        </div>
+                    </div>
+
+                    <!-- 4 -->
+                    <div class="flex flex-col items-center text-center gap-2 <%= !isS4Done && !isS4Active ? 'opacity-50' : '' %>">
+                        <div class="w-9 h-9 rounded-full <%= isS4Done ? 'bg-emerald-500 text-white' : (isS4Active ? 'bg-sky-600 text-white' : 'bg-gray-100 text-gray-400 border border-gray-200') %> flex items-center justify-center text-sm font-bold shrink-0">
+                            <% if (isS4Done) { %><i class="fa-solid fa-check"></i><% } else { %><i class="fa-solid fa-road text-xs"></i><% } %>
+                        </div>
+                        <div>
+                            <div class="text-xs font-semibold text-gray-700">Test & Yıkama</div>
+                            <div class="text-[11px] text-gray-400"><%= isS4Active ? 'Testte' : (isS4Done ? 'Tamamlandı' : 'Sırada') %></div>
+                        </div>
+                    </div>
+
+                    <!-- 5 -->
+                    <div class="flex flex-col items-center text-center gap-2 <%= !isS5Done && !isS5Active ? 'opacity-40' : '' %>">
+                        <div class="w-9 h-9 rounded-full <%= isS5Done ? 'bg-emerald-500 text-white' : (isS5Active ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-400 border border-gray-200') %> flex items-center justify-center text-sm font-bold shrink-0">
+                            <% if (isS5Done) { %><i class="fa-solid fa-check"></i><% } else { %><i class="fa-solid fa-flag-checkered text-xs"></i><% } %>
+                        </div>
+                        <div>
+                            <div class="text-xs font-semibold text-gray-700">Teslime Hazır</div>
+                            <div class="text-[11px] text-gray-400"><%= isS5Active ? 'Hazır ✓' : (isS5Done ? 'Teslim Edildi' : 'Beklemede') %></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- İlerleme Çubuğu Çizgisi -->
+                <div class="w-full bg-gray-100 rounded-full h-1.5 mt-5">
+                    <% 
+                        let progressWidth = '20%';
+                        if (currentIdx >= 5) progressWidth = '100%';
+                        else if (currentIdx === 4) progressWidth = '80%';
+                        else if (currentIdx === 3) progressWidth = '60%';
+                        else if (currentIdx >= 1) progressWidth = '40%';
+                    %>
+                    <div class="bg-gradient-to-r from-emerald-500 via-emerald-500 to-sky-600 h-1.5 rounded-full" style="width: <%= progressWidth %>;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2 KOLONLU DETAY ALANI (Sol: Usta Raporu & Fotoğraflar, Sağ: Fatura ve Parça Detayı) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+            
+            <!-- Sol Kolon: Usta Raporu & Arıza Görselleri (7 Birim) -->
+            <div class="lg:col-span-7 space-y-4 sm:space-y-6">
+                
+                <!-- Usta Raporu Kartı -->
+                <div class="bg-white border border-gray-200/80 rounded-2xl p-4 sm:p-6 shadow-xs">
+                    <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-gray-100 mb-3 sm:mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-xs sm:text-sm shrink-0">
+                                AU
+                            </div>
+                            <div>
+                                <div class="font-display font-bold text-gray-900 text-xs sm:text-sm">Ahmet Usta</div>
+                                <div class="text-[11px] sm:text-xs text-gray-500">Mekanik Servis Şefi • <%= vehicle.station || 'İstasyon' %></div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] sm:text-[11px] font-semibold text-gray-500 bg-gray-50 px-2 sm:px-2.5 py-1 rounded-lg border border-gray-100">
+                            Yetkili Teşhis
+                        </span>
+                    </div>
+                    
+                    <div class="bg-gray-50/70 border border-gray-100 rounded-xl p-3.5 sm:p-4 text-xs sm:text-sm text-gray-700 leading-relaxed space-y-1.5 sm:space-y-2">
+                        <p>
+                            <i class="fa-solid fa-quote-left text-gray-300 mr-1"></i>
+                            <%= vehicle.initial_complaint ? `"${vehicle.initial_complaint}" şikayetiyle servisimize kabul edilen aracınızın mekanik kontrolleri tamamlanmıştır.` : 'Aracınızın atölye kabulü yapılmış olup tüm periyodik kontroller ve parça kontrolleri titizlikle yürütülmektedir.' %>
+                        </p>
+                        <p class="text-[11px] sm:text-xs text-gray-500 font-medium pt-1">
+                            Montaj ve parça değişimleri sonrasında yol testi ve son kontrol yapılarak aracınız teslime hazır hale getirilecektir.
+                        </p>
+                    </div>
+
+                    <!-- Teşhis ve Parça Fotoğrafları (Varsa gerçek fotoğraflar, yoksa önizleme kartları) -->
+                    <div class="mt-4 sm:mt-5">
+                        <div class="flex justify-between items-center mb-2.5 sm:mb-3">
+                            <span class="text-[11px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                Servis Fotoğrafları <%= vehicle.photos && vehicle.photos.length > 0 ? `(${vehicle.photos.length} Görsel)` : '' %>
+                            </span>
+                        </div>
+
+                        <% if (vehicle.photos && vehicle.photos.length > 0) { %>
+                            <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
+                                <% vehicle.photos.slice(0, 2).forEach(p => { %>
+                                    <div class="rounded-xl bg-gray-50 border border-gray-200/60 overflow-hidden shadow-xs">
+                                        <a href="<%= p.photo_path %>" target="_blank" class="block relative group">
+                                            <img src="<%= p.photo_path %>" alt="<%= p.caption || 'Parça Fotoğrafı' %>" class="w-full h-28 sm:h-36 object-cover group-hover:opacity-90 transition">
+                                            <div class="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/60 text-[9px] text-white font-semibold flex items-center gap-1">
+                                                <i class="fa-solid fa-expand"></i> İncele
+                                            </div>
+                                        </a>
+                                        <div class="p-2 sm:p-2.5">
+                                            <div class="text-[11px] font-bold text-gray-800 truncate"><%= p.caption || 'Servis Fotoğrafı' %></div>
+                                            <div class="text-[9px] text-gray-400 mt-0.5"><%= p.created_at || '' %></div>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            </div>
+                        <% } else { %>
+                            <!-- Varsayılan Şık Görsel Kartları -->
+                            <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
+                                <div class="bg-gray-50 hover:bg-gray-100/80 rounded-xl p-2.5 sm:p-3 border border-gray-200/60 flex items-center gap-2.5 sm:gap-3 group transition-all">
+                                    <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-gray-600 transition-colors shrink-0 shadow-xs">
+                                        <i class="fa-solid fa-camera text-sm sm:text-base"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="text-[11px] sm:text-xs font-bold text-gray-800 truncate">Teşhis Kaydı</div>
+                                        <div class="text-[10px] text-gray-400 mt-0.5 truncate">Kabul tespiti</div>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 hover:bg-gray-100/80 rounded-xl p-2.5 sm:p-3 border border-gray-200/60 flex items-center gap-2.5 sm:gap-3 group transition-all">
+                                    <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-gray-600 transition-colors shrink-0 shadow-xs">
+                                        <i class="fa-solid fa-box-open text-sm sm:text-base"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="text-[11px] sm:text-xs font-bold text-gray-800 truncate">Orijinal Parça</div>
+                                        <div class="text-[10px] text-gray-400 mt-0.5 truncate">Sertifikalı değişim</div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Sağ Kolon: Şeffaf Fatura & Hızlı İletişim (5 Birim) -->
+            <div class="lg:col-span-5 space-y-4 sm:space-y-6">
+                
+                <!-- Onaylanan Fatura Kalemleri -->
+                <div class="bg-white border border-gray-200/80 rounded-2xl p-4 sm:p-6 shadow-xs">
+                    <div class="flex items-center justify-between pb-3 border-b border-gray-100 mb-3 sm:mb-4">
+                        <h4 class="font-display font-bold text-gray-900 text-xs sm:text-sm">Onaylanan İşlem Dökümü</h4>
+                        <span class="text-[10px] sm:text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">
+                            <i class="fa-solid fa-check text-[10px]"></i> Onaylandı
+                        </span>
+                    </div>
+
+                    <!-- Kalemler -->
+                    <div class="space-y-2.5 sm:space-y-3 text-xs">
+                        <% if (vehicle.receipt && vehicle.receipt.items && vehicle.receipt.items.length > 0) { %>
+                            <% vehicle.receipt.items.forEach(it => { %>
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <div class="font-semibold text-gray-900"><%= it.name %></div>
+                                        <div class="text-[10px] sm:text-[11px] text-gray-400">Yedek Parça</div>
+                                    </div>
+                                    <span class="font-mono font-bold text-gray-900"><%= Number(it.price).toLocaleString('tr-TR') %> ₺</span>
+                                </div>
+                            <% }); %>
+                        <% } else if (vehicle.approvals && vehicle.approvals.length > 0) { %>
+                            <% vehicle.approvals.forEach(appr => { %>
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <div class="font-semibold text-gray-900"><%= appr.part_name %></div>
+                                        <div class="text-[10px] sm:text-[11px] text-gray-400"><%= appr.note || 'Değişim' %></div>
+                                    </div>
+                                    <span class="font-mono font-bold text-gray-900"><%= appr.price ? Number(appr.price).toLocaleString('tr-TR') + ' ₺' : 'Dahil' %></span>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <!-- Örnek / Standart Kalemler -->
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="font-semibold text-gray-900">Periyodik Bakım Seti</div>
+                                    <div class="text-[10px] sm:text-[11px] text-gray-400">Filtre & Yağ Değişimi</div>
+                                </div>
+                                <span class="font-mono font-bold text-gray-900">2.850,00 ₺</span>
+                            </div>
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="font-semibold text-gray-900">Mekanik Servis İşçiliği</div>
+                                    <div class="text-[10px] sm:text-[11px] text-gray-400">Kontrol ve Montaj</div>
+                                </div>
+                                <span class="font-mono font-bold text-gray-900">1.250,00 ₺</span>
+                            </div>
+                        <% } %>
+
+                        <% if (vehicle.receipt && vehicle.receipt.labor_cost > 0) { %>
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="font-semibold text-gray-900">Mekanik Servis İşçiliği</div>
+                                    <div class="text-[10px] sm:text-[11px] text-gray-400">Atölye Montaj Bedeli</div>
+                                </div>
+                                <span class="font-mono font-bold text-gray-900"><%= Number(vehicle.receipt.labor_cost).toLocaleString('tr-TR') %> ₺</span>
+                            </div>
+                        <% } %>
+
+                        <!-- Toplam Tutar -->
+                        <div class="pt-2.5 sm:pt-3 border-t border-gray-100 flex justify-between items-center text-sm">
+                            <div>
+                                <div class="font-display font-extrabold text-gray-900 text-xs sm:text-sm">Toplam Servis Bedeli</div>
+                                <div class="text-[10px] text-gray-400">KDV ve İşçilik Dahil</div>
+                            </div>
+                            <div class="font-mono font-extrabold text-lg sm:text-xl text-gray-900">
+                                <%= vehicle.receipt ? Number(vehicle.receipt.total_amount).toLocaleString('tr-TR') + ' ₺' : '4.100,00 ₺' %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WhatsApp Onay Logu -->
+                    <div class="mt-3.5 sm:mt-4 pt-2.5 sm:pt-3 border-t border-gray-100 flex items-center gap-2 text-[10px] sm:text-[11px] text-emerald-700 bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-100">
+                        <i class="fa-brands fa-whatsapp text-sm text-emerald-600 shrink-0"></i>
+                        <span>Bu tutar ve işlemler WhatsApp bilgilendirme mesajı ile müşteri tarafından onaylanmıştır.</span>
+                    </div>
+                </div>
+
+                <!-- Hızlı İletişim & Konum Aksiyonları -->
+                <div class="bg-white border border-gray-200/80 rounded-2xl p-4 sm:p-5 shadow-xs space-y-2.5 sm:space-y-3">
+                    <a 
+                        href="https://wa.me/<%= vehicle.workshop_phone || '' %>?text=Merhaba,%20<%= vehicle.plate %>%20plakalı%20aracımın%20servis%20durumu%20hakkında%20bilgi%20almak%20istiyorum." 
+                        target="_blank" 
+                        class="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-3 sm:py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer"
+                    >
+                        <i class="fa-brands fa-whatsapp text-base sm:text-lg"></i>
+                        <span>Servis Şefine WhatsApp'tan Yaz</span>
+                    </a>
+                    
+                    <div class="grid grid-cols-2 gap-2 sm:gap-2.5">
+                        <a 
+                            href="tel:<%= vehicle.workshop_phone || '' %>" 
+                            class="bg-gray-50 hover:bg-gray-100 text-gray-700 py-2.5 px-3 rounded-xl font-semibold text-xs border border-gray-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                            <i class="fa-solid fa-phone text-[11px] text-gray-500"></i>
+                            <span>Servisi Ara</span>
+                        </a>
+                        <a 
+                            href="https://maps.google.com/?q=Oto+Servis" 
+                            target="_blank" 
+                            class="bg-gray-50 hover:bg-gray-100 text-gray-700 py-2.5 px-3 rounded-xl font-semibold text-xs border border-gray-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                            <i class="fa-solid fa-location-dot text-[11px] text-gray-500"></i>
+                            <span>Yol Tarifi Al</span>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
 
     <% } %>

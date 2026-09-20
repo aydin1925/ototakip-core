@@ -1,32 +1,29 @@
-<div class="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 sm:p-6 lg:p-8">
-    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+<div class="min-h-[calc(100vh-12rem)] flex items-center justify-center py-6 sm:py-12">
+    <div class="w-full max-w-md bg-white/90 backdrop-blur-md border border-gray-200/90 rounded-3xl p-6 sm:p-8 shadow-xs relative">
         
-        <!-- Arka Plan Dekoratif Işıltı -->
-        <div class="absolute -top-24 -right-24 w-48 h-48 bg-orange-600/10 rounded-full blur-3xl pointer-events-none"></div>
-
         <!-- Başlık -->
         <div class="text-center mb-8">
-            <div class="w-12 h-12 rounded-2xl bg-orange-600/10 border border-orange-500/20 text-orange-500 flex items-center justify-center mx-auto mb-3 text-xl">
+            <div class="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center mx-auto mb-3 text-xl shadow-xs">
                 <i class="fa-solid fa-lock"></i>
             </div>
-            <h1 class="text-2xl font-bold tracking-tight text-white">Usta Girişi</h1>
-            <p class="text-sm text-slate-400 mt-1">Servis paneline erişmek için giriş yapın</p>
+            <h1 class="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-gray-900">Usta Girişi</h1>
+            <p class="text-xs sm:text-sm text-gray-500 mt-1">Servis ve lift paneline erişmek için oturum açın</p>
         </div>
 
         <!-- Hata Bildirimi (Varsa) -->
         <% if (typeof error !== 'undefined' && error) { %>
-            <div class="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center gap-3">
-                <i class="fa-solid fa-circle-exclamation text-rose-500"></i>
+            <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-center gap-3">
+                <i class="fa-solid fa-circle-exclamation text-rose-500 text-base shrink-0"></i>
                 <span><%= error %></span>
             </div>
         <% } %>
 
         <!-- Giriş Formu -->
-        <form action="/login" method="POST" class="space-y-5">
+        <form action="/login" method="POST" class="space-y-4">
             <div>
-                <label for="identifier" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Telefon veya E-Posta</label>
+                <label for="identifier" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">Telefon veya E-Posta</label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
                         <i class="fa-solid fa-phone text-xs"></i>
                     </span>
                     <input 
@@ -36,15 +33,15 @@
                         required 
                         placeholder="0532 111 22 33 veya usta@servis.com" 
                         value="<%= typeof formData !== 'undefined' && formData.identifier ? formData.identifier : '' %>"
-                        class="w-full pl-10 pr-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl text-white placeholder-slate-600 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 text-sm focus:bg-white focus:border-sky-600 focus:outline-none transition-colors"
                     >
                 </div>
             </div>
 
             <div>
-                <label for="password" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Şifre</label>
+                <label for="password" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">Şifre</label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400">
                         <i class="fa-solid fa-key text-xs"></i>
                     </span>
                     <input 
@@ -53,14 +50,14 @@
                         id="password" 
                         required 
                         placeholder="••••••••" 
-                        class="w-full pl-10 pr-4 py-3 bg-slate-950/60 border border-slate-800 rounded-xl text-white placeholder-slate-600 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
+                        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 text-sm focus:bg-white focus:border-sky-600 focus:outline-none transition-colors"
                     >
                 </div>
             </div>
 
             <button 
                 type="submit" 
-                class="w-full py-3.5 px-4 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-semibold text-sm shadow-lg shadow-orange-600/30 transition-all flex items-center justify-center gap-2 mt-2"
+                class="w-full py-3 px-4 rounded-xl bg-gray-900 hover:bg-black text-white font-semibold text-sm shadow-xs transition-all flex items-center justify-center gap-2 mt-4 cursor-pointer"
             >
                 <span>Giriş Yap</span>
                 <i class="fa-solid fa-arrow-right text-xs"></i>
@@ -68,10 +65,10 @@
         </form>
 
         <!-- Kayıt Yönlendirmesi -->
-        <div class="text-center mt-8 pt-6 border-t border-slate-800/80">
-            <p class="text-xs text-slate-400">
-                Henüz bir servis kaydınız yok mu? 
-                <a href="/register" class="text-orange-500 hover:text-orange-400 font-semibold ml-1">Hemen Kaydolun</a>
+        <div class="text-center mt-6 pt-5 border-t border-gray-100">
+            <p class="text-xs text-gray-500">
+                Henüz servis kaydınız yok mu? 
+                <a href="/register" class="text-sky-600 hover:text-sky-700 font-bold ml-1">Hemen Kaydolun</a>
             </p>
         </div>
 
