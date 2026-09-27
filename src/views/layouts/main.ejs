@@ -43,24 +43,18 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #fafafa; 
-            background-image: 
-                radial-gradient(circle at 10% 0%, rgba(14, 165, 233, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 90% 15%, rgba(34, 197, 94, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 50% 100%, rgba(14, 165, 233, 0.04) 0%, transparent 60%),
-                radial-gradient(#e5e7eb 1.2px, transparent 1.2px);
-            background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px;
-            color: #111827; 
+            background-color: #090b10; 
+            color: #f8fafc; 
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Cam Menü & Kartlar */
+        /* Kristal Cam Menü & Kartlar */
         .nav-glass {
-            background: rgba(255, 255, 255, 0.75);
+            background: rgba(15, 23, 42, 0.55);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 1);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
         .btn-elegant {
@@ -137,13 +131,30 @@
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col antialiased">
+<body class="min-h-screen flex flex-col relative overflow-x-hidden bg-[#090b10] text-slate-100 antialiased selection:bg-white selection:text-black">
+
+    <!-- ========================================================= -->
+    <!-- ARKA PLAN FOTOĞRAFI & SİNEMATİK TİTANYUM MONOKROM KATMAN   -->
+    <!-- ========================================================= -->
+    <div id="hero-bg-container" class="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+        <!-- 1. Gerçek Atölye Fotoğrafı -->
+        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat scale-100"
+             style="background-image: url('/images/workshop_hero.jpg');"></div>
+        
+        <!-- 2. Titanyum Monokrom Dengeli Karartma Katmanı (0.65) -->
+        <div class="absolute inset-0"
+             style="background: rgba(8, 10, 15, 0.65);"></div>
+
+        <!-- 3. Kenar Yumuşatma / İnce Vignette -->
+        <div class="absolute inset-0"
+             style="background: linear-gradient(180deg, rgba(8,10,15,0.50) 0%, transparent 20%, transparent 80%, rgba(8,10,15,0.85) 100%);"></div>
+    </div>
 
     <!-- Üst Menü / Navbar -->
     <%- include('../partials/navbar') %>
 
     <!-- Sayfa İçeriği -->
-    <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+    <main class="flex-1 w-full max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-4 sm:py-8">
         <%- body %>
     </main>
 

@@ -4,46 +4,46 @@
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
             <div class="flex items-center gap-2 mb-2">
-                <a href="/dashboard" class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-black transition-colors">
+                <a href="/dashboard" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition-colors">
                     <i class="fa-solid fa-arrow-left text-[10px]"></i>
                     <span>Liftlere Dön</span>
                 </a>
-                <span class="text-gray-300">•</span>
-                <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">Tamamlanan İşler</span>
+                <span class="text-white/20">•</span>
+                <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Tamamlanan İşler</span>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-display font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+            <h1 class="text-2xl sm:text-3xl font-display font-extrabold text-white tracking-tight flex items-center gap-3">
                 <span>Servis Arşivi & Geçmiş Kayıtlar</span>
             </h1>
-            <p class="text-sm text-gray-500 mt-1">İşlemleri tamamlanan ve teslim edilen araçların fatura, parça ve servis geçmişi</p>
+            <p class="text-sm text-slate-300 mt-1">İşlemleri tamamlanan ve teslim edilen araçların fatura, parça ve servis geçmişi</p>
         </div>
 
         <!-- Canlı İstatistikler -->
         <div class="flex items-center gap-3">
-            <div class="px-4 py-2.5 rounded-2xl bg-white border border-gray-200/80 shadow-xs text-right">
-                <div class="text-[10px] uppercase font-bold text-gray-400">Teslim Edilen Araç</div>
-                <div id="total-delivered-count" class="text-lg font-display font-extrabold text-gray-900"><%= totalDelivered %></div>
+            <div class="px-4 py-2.5 rounded-2xl border border-white/20 shadow-xl text-right backdrop-blur-xl" style="background: rgba(15, 23, 42, 0.45);">
+                <div class="text-[10px] uppercase font-bold text-slate-300">Teslim Edilen Araç</div>
+                <div id="total-delivered-count" class="text-lg font-display font-extrabold text-white"><%= totalDelivered %></div>
             </div>
-            <div class="px-4 py-2.5 rounded-2xl bg-white border border-emerald-200/80 shadow-xs text-right">
-                <div class="text-[10px] uppercase font-bold text-emerald-600">Arşiv Servis Hacmi</div>
-                <div id="total-revenue-count" class="text-lg font-mono font-extrabold text-emerald-700"><%= totalRevenue.toLocaleString('tr-TR') %> TL</div>
+            <div class="px-4 py-2.5 rounded-2xl border border-emerald-400/30 shadow-xl text-right backdrop-blur-xl" style="background: rgba(15, 23, 42, 0.45);">
+                <div class="text-[10px] uppercase font-bold text-emerald-300">Arşiv Servis Hacmi</div>
+                <div id="total-revenue-count" class="text-lg font-mono font-extrabold text-emerald-400"><%= totalRevenue.toLocaleString('tr-TR') %> TL</div>
             </div>
         </div>
     </div>
 
     <!-- AJAX Arama ve Filtreleme Barı -->
-    <div class="rounded-2xl bg-white border border-gray-200/80 p-4 shadow-xs">
+    <div class="rounded-2xl sm:rounded-3xl border border-white/20 p-4 shadow-xl backdrop-blur-xl" style="background: rgba(15, 23, 42, 0.45);">
         <div class="relative flex items-center">
-            <i class="fa-solid fa-magnifying-glass absolute left-4 text-gray-400 text-sm"></i>
+            <i class="fa-solid fa-magnifying-glass absolute left-4 text-slate-400 text-sm"></i>
             <input 
                 type="text" 
                 id="archive-search-input"
                 value="<%= searchQuery %>"
                 placeholder="Plaka, müşteri adı, araç modeli veya telefon numarası ile anlık ara... (Örn: 34 BJK, Golf, Mehmet)"
                 autocomplete="off"
-                class="w-full pl-11 pr-24 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:bg-white focus:border-sky-600 focus:outline-none placeholder:text-gray-400 transition-all font-medium"
+                class="w-full pl-11 pr-24 py-3 bg-black/50 border border-white/15 rounded-xl text-white text-sm focus:border-sky-500 focus:outline-none placeholder:text-slate-400 transition-all font-medium"
             >
             <!-- Arama Yükleniyor Spinner'ı -->
-            <div id="search-spinner" class="absolute right-12 text-sky-600 hidden animate-spin text-sm">
+            <div id="search-spinner" class="absolute right-12 text-sky-400 hidden animate-spin text-sm">
                 <i class="fa-solid fa-circle-notch"></i>
             </div>
             <!-- Temizle Butonu -->
@@ -51,95 +51,98 @@
                 type="button" 
                 id="clear-search-btn"
                 onclick="clearArchiveSearch()"
-                class="absolute right-3 px-2 py-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 text-xs font-semibold transition-all <%= searchQuery ? '' : 'hidden' %>"
+                class="absolute right-3 px-2 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 text-xs font-semibold transition-all <%= searchQuery ? '' : 'hidden' %> cursor-pointer"
             >
                 Temizle
             </button>
         </div>
-        <div class="flex items-center justify-between text-[11px] text-gray-400 mt-2 px-1">
-            <span><i class="fa-solid fa-bolt text-sky-500 mr-1"></i>AJAX anlık arama etkindir, yazdıkça sonuçlar yenilenir.</span>
-            <span id="results-count-text" class="font-semibold text-gray-600"><%= archivedCars.length %> kayıt listeleniyor</span>
+        <div class="flex items-center justify-between text-[11px] text-slate-300 mt-2 px-1">
+            <span><i class="fa-solid fa-bolt text-sky-400 mr-1"></i>AJAX anlık arama etkindir, yazdıkça sonuçlar yenilenir.</span>
+            <span id="results-count-text" class="font-semibold text-slate-200"><%= archivedCars.length %> kayıt listeleniyor</span>
         </div>
     </div>
 
     <!-- Arşiv Kartları Listesi -->
     <div id="archive-cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <% if (archivedCars.length === 0) { %>
-            <div class="col-span-full text-center py-16 px-4 rounded-3xl bg-white border border-gray-200/80 shadow-xs">
-                <div class="w-16 h-16 rounded-3xl bg-gray-50 border border-gray-100 flex items-center justify-center mx-auto mb-4 text-gray-400 text-2xl">
+            <div class="col-span-full text-center py-16 px-4 rounded-3xl border border-white/20 shadow-xl backdrop-blur-xl" style="background: rgba(15, 23, 42, 0.45);">
+                <div class="w-16 h-16 rounded-3xl bg-white/10 border border-white/15 flex items-center justify-center mx-auto mb-4 text-slate-400 text-2xl">
                     <i class="fa-solid fa-box-open"></i>
                 </div>
-                <h3 class="text-lg font-display font-bold text-gray-900">Arşivde araç kaydı bulunamadı</h3>
-                <p class="text-sm text-gray-500 max-w-sm mx-auto mt-1">
+                <h3 class="text-lg font-display font-bold text-white">Arşivde araç kaydı bulunamadı</h3>
+                <p class="text-sm text-slate-300 max-w-sm mx-auto mt-1">
                     <%= searchQuery ? 'Arama kriterlerinize uygun araç bulunamadı.' : 'Henüz müşteriye teslim edilmiş bir araç bulunmuyor.' %>
                 </p>
             </div>
         <% } else { %>
             <% archivedCars.forEach(car => { %>
-                <div class="rounded-2xl bg-white border border-gray-200/80 p-5 flex flex-col justify-between hover:border-gray-300 transition-all shadow-xs relative overflow-hidden group">
+                <div class="rounded-3xl border border-white/15 hover:border-amber-400/50 p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1 relative overflow-hidden group text-white backdrop-blur-xl" style="background: rgba(15, 23, 42, 0.48);">
                     <div>
                         <!-- Üst Plaka ve Teslim Rozeti -->
                         <div class="flex items-center justify-between gap-2 mb-4">
                             <!-- TR Plaka Grafiği -->
-                            <div class="plate">
-                                <span class="plate-tr">TR</span>
-                                <span class="plate-num"><%= car.plate %></span>
+                            <div class="plate inline-flex items-stretch border-2 border-slate-900 rounded-lg overflow-hidden bg-white shadow-md font-mono font-black text-xs leading-none select-none max-w-full">
+                                <div class="plate-tr bg-blue-700 text-white px-1.5 py-1 flex flex-col justify-between items-center text-[8px] font-bold">
+                                    <span class="text-[6px] opacity-75">★</span>
+                                    <span>TR</span>
+                                </div>
+                                <div class="plate-num px-2.5 py-1 text-slate-950 font-black tracking-wider text-xs sm:text-sm flex items-center font-mono"><%= car.plate %></div>
                             </div>
 
-                            <span class="badge badge-green flex items-center gap-1">
+                            <span class="badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                                 <i class="fa-solid fa-circle-check text-[10px]"></i>
                                 Teslim Edildi
                             </span>
                         </div>
 
                         <!-- Araç Modeli -->
-                        <h3 class="text-lg font-display font-bold text-gray-900 group-hover:text-sky-600 transition-colors">
+                        <h3 class="text-lg font-display font-black text-white group-hover:text-amber-300 transition-colors">
                             <%= car.car_model %>
                         </h3>
 
                         <!-- Müşteri Bilgileri -->
-                        <div class="text-xs text-gray-500 mt-2 space-y-1">
+                        <div class="text-xs text-slate-300 mt-2 space-y-1.5 p-2.5 rounded-xl bg-black/40 border border-white/10">
                             <div class="flex items-center gap-2">
-                                <i class="fa-solid fa-user text-gray-400 w-3.5"></i>
-                                <span class="text-gray-700 font-medium"><%= car.customer_name || 'Müşteri Belirtilmedi' %></span>
+                                <i class="fa-solid fa-user text-slate-400 w-3.5"></i>
+                                <span class="font-medium text-slate-200"><%= car.customer_name || 'Müşteri Belirtilmedi' %></span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <i class="fa-solid fa-phone text-gray-400 w-3.5"></i>
-                                <span><%= car.customer_phone %></span>
+                                <i class="fa-solid fa-phone text-slate-400 w-3.5"></i>
+                                <span class="font-mono text-emerald-400 font-bold"><%= car.customer_phone %></span>
                             </div>
                         </div>
 
                         <!-- Giriş & Teslim Tarihleri -->
-                        <div class="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2 text-[11px]">
+                        <div class="mt-4 pt-3 border-t border-white/10 grid grid-cols-2 gap-2 text-[11px]">
                             <div>
-                                <span class="text-gray-400 block">Kabul Tarihi:</span>
-                                <span class="text-gray-700 font-medium"><%= car.created_at ? car.created_at.substring(0, 16) : '-' %></span>
+                                <span class="text-slate-400 block text-[10px] uppercase font-bold">Kabul Tarihi:</span>
+                                <span class="text-slate-200 font-medium"><%= car.created_at ? car.created_at.substring(0, 16) : '-' %></span>
                             </div>
                             <div>
-                                <span class="text-gray-400 block">Teslim Tarihi:</span>
-                                <span class="text-emerald-700 font-medium"><%= car.completed_at ? car.completed_at.substring(0, 16) : '-' %></span>
+                                <span class="text-slate-400 block text-[10px] uppercase font-bold">Teslim Tarihi:</span>
+                                <span class="text-emerald-400 font-medium"><%= car.completed_at ? car.completed_at.substring(0, 16) : '-' %></span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Alt Bar: Servis Bedeli & Detay Masasına Git -->
-                    <div class="mt-5 pt-3.5 border-t border-gray-100 flex items-center justify-between gap-3">
+                    <div class="mt-5 pt-3.5 border-t border-white/10 flex items-center justify-between gap-3">
                         <div>
-                            <div class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Servis Bedeli</div>
+                            <div class="text-[10px] text-slate-400 uppercase font-black tracking-wider">Servis Bedeli</div>
                             <% if (car.invoice_amount) { %>
-                                <div class="text-base font-extrabold text-gray-900 font-mono">
+                                <div class="text-base font-extrabold text-white font-mono">
                                     <%= Number(car.invoice_amount).toLocaleString('tr-TR') %> TL
                                 </div>
                             <% } else { %>
-                                <div class="text-xs text-gray-400">Fiş Kesilmedi</div>
+                                <div class="text-xs text-slate-400">Fiş Kesilmedi</div>
                             <% } %>
                         </div>
 
                         <a 
                             href="/arac/<%= car.id %>" 
-                            class="py-2 px-3.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-black font-semibold text-xs transition-all flex items-center gap-1.5 border border-gray-200"
+                            class="py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all flex items-center gap-1.5 border border-white/15 hover:border-white/30 cursor-pointer"
                         >
-                            <i class="fa-solid fa-file-lines text-xs text-gray-400"></i>
+                            <i class="fa-solid fa-file-lines text-xs text-slate-300"></i>
                             <span>İncele</span>
                         </a>
                     </div>
@@ -210,12 +213,12 @@
     function renderArchiveCards(cars, query) {
         if (!cars || cars.length === 0) {
             cardsContainer.innerHTML = `
-                <div class="col-span-full text-center py-16 px-4 rounded-3xl bg-white border border-gray-200/80 shadow-xs">
-                    <div class="w-16 h-16 rounded-3xl bg-gray-50 border border-gray-100 flex items-center justify-center mx-auto mb-4 text-gray-400 text-2xl">
+                <div class="col-span-full text-center py-16 px-4 rounded-3xl border border-white/20 shadow-xl backdrop-blur-xl" style="background: rgba(15, 23, 42, 0.45);">
+                    <div class="w-16 h-16 rounded-3xl bg-white/10 border border-white/15 flex items-center justify-center mx-auto mb-4 text-slate-400 text-2xl">
                         <i class="fa-solid fa-box-open"></i>
                     </div>
-                    <h3 class="text-lg font-display font-bold text-gray-900">Arşivde araç kaydı bulunamadı</h3>
-                    <p class="text-sm text-gray-500 max-w-sm mx-auto mt-1">
+                    <h3 class="text-lg font-display font-bold text-white">Arşivde araç kaydı bulunamadı</h3>
+                    <p class="text-sm text-slate-300 max-w-sm mx-auto mt-1">
                         ${query ? '<strong>"' + escapeHtml(query) + '"</strong> aramasına uygun araç bulunamadı.' : 'Henüz teslim edilmiş araç bulunmuyor.'}
                     </p>
                 </div>
@@ -224,63 +227,66 @@
         }
 
         cardsContainer.innerHTML = cars.map(car => `
-            <div class="rounded-2xl bg-white border border-gray-200/80 p-5 flex flex-col justify-between hover:border-gray-300 transition-all shadow-xs relative overflow-hidden group">
+            <div class="rounded-3xl border border-white/15 hover:border-amber-400/50 p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1 relative overflow-hidden group text-white backdrop-blur-xl" style="background: rgba(15, 23, 42, 0.48);">
                 <div>
                     <div class="flex items-center justify-between gap-2 mb-4">
-                        <div class="plate">
-                            <span class="plate-tr">TR</span>
-                            <span class="plate-num">${escapeHtml(car.plate)}</span>
+                        <div class="plate inline-flex items-stretch border-2 border-slate-900 rounded-lg overflow-hidden bg-white shadow-md font-mono font-black text-xs leading-none select-none max-w-full">
+                            <div class="plate-tr bg-blue-700 text-white px-1.5 py-1 flex flex-col justify-between items-center text-[8px] font-bold">
+                                <span class="text-[6px] opacity-75">★</span>
+                                <span>TR</span>
+                            </div>
+                            <div class="plate-num px-2.5 py-1 text-slate-950 font-black tracking-wider text-xs sm:text-sm flex items-center font-mono">${escapeHtml(car.plate)}</div>
                         </div>
-                        <span class="badge badge-green flex items-center gap-1">
+                        <span class="badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
                             <i class="fa-solid fa-circle-check text-[10px]"></i>
                             Teslim Edildi
                         </span>
                     </div>
 
-                    <h3 class="text-lg font-display font-bold text-gray-900 group-hover:text-sky-600 transition-colors">
+                    <h3 class="text-lg font-display font-black text-white group-hover:text-amber-300 transition-colors">
                         ${escapeHtml(car.car_model)}
                     </h3>
 
-                    <div class="text-xs text-gray-500 mt-2 space-y-1">
+                    <div class="text-xs text-slate-300 mt-2 space-y-1.5 p-2.5 rounded-xl bg-black/40 border border-white/10">
                         <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-user text-gray-400 w-3.5"></i>
-                            <span class="text-gray-700 font-medium">${escapeHtml(car.customer_name || 'Müşteri Belirtilmedi')}</span>
+                            <i class="fa-solid fa-user text-slate-400 w-3.5"></i>
+                            <span class="font-medium text-slate-200">${escapeHtml(car.customer_name || 'Müşteri Belirtilmedi')}</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-phone text-gray-400 w-3.5"></i>
-                            <span>${escapeHtml(car.customer_phone || '')}</span>
+                            <i class="fa-solid fa-phone text-slate-400 w-3.5"></i>
+                            <span class="font-mono text-emerald-400 font-bold">${escapeHtml(car.customer_phone || '')}</span>
                         </div>
                     </div>
 
-                    <div class="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2 text-[11px]">
+                    <div class="mt-4 pt-3 border-t border-white/10 grid grid-cols-2 gap-2 text-[11px]">
                         <div>
-                            <span class="text-gray-400 block">Kabul Tarihi:</span>
-                            <span class="text-gray-700 font-medium">${car.created_at ? car.created_at.substring(0, 16) : '-'}</span>
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Kabul Tarihi:</span>
+                            <span class="text-slate-200 font-medium">${car.created_at ? car.created_at.substring(0, 16) : '-'}</span>
                         </div>
                         <div>
-                            <span class="text-gray-400 block">Teslim Tarihi:</span>
-                            <span class="text-emerald-700 font-medium">${car.completed_at ? car.completed_at.substring(0, 16) : '-'}</span>
+                            <span class="text-slate-400 block text-[10px] uppercase font-bold">Teslim Tarihi:</span>
+                            <span class="text-emerald-400 font-medium">${car.completed_at ? car.completed_at.substring(0, 16) : '-'}</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-5 pt-3.5 border-t border-gray-100 flex items-center justify-between gap-3">
+                <div class="mt-5 pt-3.5 border-t border-white/10 flex items-center justify-between gap-3">
                     <div>
-                        <div class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Servis Bedeli</div>
+                        <div class="text-[10px] text-slate-400 uppercase font-black tracking-wider">Servis Bedeli</div>
                         ${car.invoice_amount ? `
-                            <div class="text-base font-extrabold text-gray-900 font-mono">
+                            <div class="text-base font-extrabold text-white font-mono">
                                 ${Number(car.invoice_amount).toLocaleString('tr-TR')} TL
                             </div>
                         ` : `
-                            <div class="text-xs text-gray-400">Fiş Kesilmedi</div>
+                            <div class="text-xs text-slate-400">Fiş Kesilmedi</div>
                         `}
                     </div>
 
                     <a 
                         href="/arac/${car.id}" 
-                        class="py-2 px-3.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-black font-semibold text-xs transition-all flex items-center gap-1.5 border border-gray-200"
+                        class="py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all flex items-center gap-1.5 border border-white/15 hover:border-white/30 cursor-pointer"
                     >
-                        <i class="fa-solid fa-file-lines text-xs text-gray-400"></i>
+                        <i class="fa-solid fa-file-lines text-xs text-slate-300"></i>
                         <span>İncele</span>
                     </a>
                 </div>

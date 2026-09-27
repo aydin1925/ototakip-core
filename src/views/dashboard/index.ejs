@@ -1,188 +1,534 @@
-<div class="space-y-6 sm:space-y-8">
+<% 
+    const totalCapacity = 5;
+    const activeCars = cars || [];
+    const emptySlots = Math.max(0, totalCapacity - activeCars.length);
+    const waitingCount = activeCars.filter(c => c.hasPendingApproval || c.status === 'INSPECTING').length;
+    const repairingCount = activeCars.filter(c => c.status === 'REPAIRING' || c.status === 'WAITING_PARTS').length;
+    const diagnosingCount = activeCars.filter(c => c.status === 'INSPECTING').length;
+    const readyCount = activeCars.filter(c => c.status === 'READY').length;
+%>
+
+<!-- USTA MASASI VE İSTASYONLAR DIŞ ÇERÇEVESİ (Buzlu Cam Panel) -->
+<div id="dashboard-outer-card" class="rounded-2xl sm:rounded-[32px] border border-white/20 p-3.5 sm:p-7 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] space-y-4 sm:space-y-6 relative overflow-hidden backdrop-blur-2xl" style="background: rgba(10, 15, 29, 0.20); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);">
     
     <!-- Üst Başlık ve Hızlı Aksiyon Barı -->
-    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-display font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
-                <span>Garaj Yönetimi</span>
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Canlı Akış
-                </span>
+    <div class="flex flex-row items-center justify-between pb-3 sm:pb-4 border-b border-white/15 gap-2">
+        <div class="min-w-0">
+            <h1 class="text-lg sm:text-2xl font-display font-black text-white tracking-tight drop-shadow-sm truncate flex items-center gap-2.5">
+                <span>Garaj & Lift Yönetimi</span>
             </h1>
-            <p class="text-sm text-gray-500 mt-1">Aktif istasyonlar ve araç durumlarının anlık takibi.</p>
+            <p class="hidden sm:block text-xs text-slate-300 mt-0.5 font-medium">Aktif lift kapasitesi ve servis operasyonlarının anlık takibi</p>
         </div>
 
         <button 
+            type="button"
             onclick="document.getElementById('new-car-modal').classList.remove('hidden')"
-            class="bg-gray-900 hover:bg-black text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-xs whitespace-nowrap cursor-pointer flex items-center justify-center gap-2 self-start sm:self-auto"
+            class="bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-950 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl font-black text-xs sm:text-sm transition-all shadow-md whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 shrink-0 border-2 border-white hover:scale-[1.02] active:scale-[0.98]"
         >
             <i class="fa-solid fa-plus text-xs"></i>
             <span>Yeni Araç Kabul</span>
         </button>
     </div>
 
-    <!-- İstatistik Özet Kartları (Açık ve Modern) -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="p-5 rounded-2xl bg-white border border-gray-200/80 shadow-xs flex items-center justify-between">
-            <div>
-                <div class="text-xs font-bold uppercase tracking-wider text-gray-400">Liftlerdeki Araçlar</div>
-                <div class="text-3xl font-display font-extrabold text-gray-900 mt-1"><%= cars.length %></div>
-            </div>
-            <div class="w-11 h-11 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center text-lg">
-                <i class="fa-solid fa-car"></i>
-            </div>
+    <!-- Usta Masası & İstasyondaki Araçlar İkili Sekme Geçişi -->
+    <div class="flex items-center justify-between gap-2 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl bg-black/40 border border-white/15 backdrop-blur-md">
+        <div class="flex items-center gap-1 sm:gap-1.5 flex-1 sm:flex-none">
+            <button 
+                type="button" 
+                id="tab-btn-desk-home"
+                onclick="toggleDashboardView('desk')" 
+                class="flex-1 sm:flex-none justify-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer bg-white text-slate-950 shadow-md"
+            >
+                <i class="fa-solid fa-table-columns text-xs"></i>
+                <span>Usta Masası (Özet)</span>
+            </button>
+            <button 
+                type="button" 
+                id="tab-btn-desk-vehicles"
+                onclick="toggleDashboardView('vehicles')" 
+                class="flex-1 sm:flex-none justify-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer text-slate-300 hover:text-white hover:bg-white/10"
+            >
+                <i class="fa-solid fa-car-side text-xs text-emerald-400"></i>
+                <span>İstasyondaki Araçlar (<%= activeCars.length %>)</span>
+                <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            </button>
         </div>
-
-        <div class="p-5 rounded-2xl bg-white border border-amber-200/70 shadow-xs flex items-center justify-between">
-            <div>
-                <div class="text-xs font-bold uppercase tracking-wider text-amber-600">Onay Bekleyenler</div>
-                <div class="text-3xl font-display font-extrabold text-amber-700 mt-1">
-                    <%= cars.filter(c => c.hasPendingApproval).length %>
-                </div>
-            </div>
-            <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center text-lg">
-                <i class="fa-brands fa-whatsapp"></i>
-            </div>
-        </div>
-
-        <div class="p-5 rounded-2xl bg-white border border-emerald-200/70 shadow-xs flex items-center justify-between">
-            <div>
-                <div class="text-xs font-bold uppercase tracking-wider text-emerald-600">Teslimata Hazır</div>
-                <div class="text-3xl font-display font-extrabold text-emerald-700 mt-1">
-                    <%= cars.filter(c => c.status === 'READY').length %>
-                </div>
-            </div>
-            <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center text-lg">
-                <i class="fa-solid fa-circle-check"></i>
-            </div>
+        <div class="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-300 pr-2 font-mono">
+            <span class="text-emerald-400 font-bold"><%= activeCars.length %> / <%= totalCapacity %></span> Lift Dolu
         </div>
     </div>
 
-    <!-- Liftler / İstasyon Kartları Izgarası (Mockup Birebir 4'lü Grid) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-        <% if (cars && cars.length > 0) { %>
-            <% cars.forEach(car => { %>
-                <div 
-                    id="car-card-<%= car.id %>"
-                    class="bg-white border border-gray-200/80 rounded-2xl flex flex-col shadow-xs overflow-hidden transition-all hover:border-gray-300"
-                >
-                    <!-- Üst İstasyon Başlığı & Durum Rozeti -->
-                    <div class="px-5 py-3.5 border-b border-gray-100 bg-gray-50/60 flex justify-between items-center">
-                        <div class="font-bold text-gray-900 text-sm">
-                            <%= car.station || 'İstasyon' %>
-                        </div>
-                        
-                        <% if (car.hasPendingApproval) { %>
-                            <span class="badge badge-amber animate-pulse">Onay Bekliyor</span>
-                        <% } else if (car.status === 'REPAIRING') { %>
-                            <span class="badge badge-blue">Onarımda</span>
-                        <% } else if (car.status === 'READY') { %>
-                            <span class="badge badge-green">Hazır</span>
-                        <% } else if (car.status === 'RECEIVED') { %>
-                            <span class="badge badge-blue">Kabul Edildi</span>
-                        <% } else if (car.status === 'INSPECTING') { %>
-                            <span class="badge bg-purple-50 text-purple-700 border border-purple-200">Teşhiste</span>
-                        <% } else if (car.status === 'TESTING') { %>
-                            <span class="badge bg-indigo-50 text-indigo-700 border border-indigo-200">Testte</span>
-                        <% } else { %>
-                            <span class="badge bg-gray-100 text-gray-700">İşlemde</span>
-                        <% } %>
+    <!-- ========================================================= -->
+    <!-- GÖRÜNÜM 1: USTA MASASI (ÖZET)                             -->
+    <!-- (Mobilde sıfır scroll, dengeli dikey dağılım)             -->
+    <!-- ========================================================= -->
+    <div id="dashboard-view-desk" class="space-y-4 sm:space-y-6">
+
+        <!-- İstatistik Özet Kartları (Yüksek Kontrastlı Buzlu Cam Düzeni) -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
+            
+            <!-- Lift Doluluğu -->
+            <div 
+                onclick="toggleDashboardView('vehicles'); filterStationCards('all');" 
+                class="p-4 sm:p-5.5 rounded-2xl sm:rounded-3xl border border-white/20 shadow-xl backdrop-blur-xl flex items-center justify-between cursor-pointer hover:border-sky-400/60 hover:scale-[1.01] transition-all group"
+                style="background: rgba(15, 23, 42, 0.45); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);"
+            >
+                <div>
+                    <div class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                        <span>Lift Doluluğu (Kapasite: <%= totalCapacity %>)</span>
+                        <i class="fa-solid fa-arrow-right text-[10px] text-sky-400 opacity-70 group-hover:opacity-100 transition-opacity"></i>
                     </div>
+                    <div class="text-2xl sm:text-3xl font-display font-black text-white mt-1">
+                        <%= activeCars.length %> <span class="text-xs sm:text-sm font-normal text-slate-300">/ <%= totalCapacity %> Lift</span>
+                    </div>
+                    <div class="text-[11px] sm:text-xs text-emerald-400 font-semibold mt-1">
+                        <%= emptySlots %> İstasyon Boş • Tıkla & Gör
+                    </div>
+                </div>
+                <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-sky-500/20 text-sky-300 border border-sky-400/40 flex items-center justify-center text-lg sm:text-xl shadow-inner group-hover:scale-110 transition-transform shrink-0">
+                    <i class="fa-solid fa-car"></i>
+                </div>
+            </div>
 
-                    <!-- Kart İçeriği -->
-                    <div class="p-5 flex-1 flex flex-col">
-                        <!-- Plaka -->
-                        <div class="plate mb-3.5">
-                            <span class="plate-tr">TR</span>
-                            <span class="plate-num"><%= car.plate %></span>
-                        </div>
-                        
-                        <!-- Model -->
-                        <div class="font-display font-bold text-gray-900 text-lg truncate">
-                            <%= car.car_model %>
-                        </div>
-                        
-                        <!-- Müşteri -->
-                        <div class="text-xs text-gray-500 mt-1 flex items-center gap-1.5 truncate">
-                            <span><i class="fa-solid fa-user text-gray-400 mr-1"></i><%= car.customer_name || 'Müşteri' %></span>
-                            <span>•</span>
-                            <span><%= car.customer_phone %></span>
-                        </div>
+            <!-- Onay Bekleyenler -->
+            <div 
+                onclick="toggleDashboardView('vehicles'); filterStationCards('waiting');" 
+                class="p-4 sm:p-5.5 rounded-2xl sm:rounded-3xl border border-amber-400/30 shadow-xl backdrop-blur-xl flex items-center justify-between cursor-pointer hover:border-amber-400 hover:scale-[1.01] transition-all group"
+                style="background: rgba(15, 23, 42, 0.45); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);"
+            >
+                <div>
+                    <div class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                        <span>Onay Bekleyenler</span>
+                        <i class="fa-solid fa-arrow-right text-[10px] text-amber-400 opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-display font-black text-white mt-1">
+                        <%= activeCars.filter(c => c.hasPendingApproval).length %> <span class="text-xs sm:text-sm font-normal text-slate-300">Araç</span>
+                    </div>
+                    <div class="text-[11px] sm:text-xs text-amber-300 font-semibold mt-1">
+                        WhatsApp Onay Talebi Aktif
+                    </div>
+                </div>
+                <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-400/30 flex items-center justify-center text-lg sm:text-xl shadow-inner group-hover:scale-110 transition-transform shrink-0">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </div>
+            </div>
 
-                        <!-- Şikayet / Arıza Notu -->
-                        <div class="text-xs sm:text-sm text-gray-500 mt-2.5 leading-relaxed line-clamp-2">
-                            <%= car.initial_complaint || 'Arıza tespiti ve periyodik kontrol yapılıyor.' %>
-                        </div>
+            <!-- Teslimata Hazır -->
+            <div 
+                onclick="toggleDashboardView('vehicles'); filterStationCards('ready');" 
+                class="p-4 sm:p-5.5 rounded-2xl sm:rounded-3xl border border-emerald-400/30 shadow-xl backdrop-blur-xl flex items-center justify-between cursor-pointer hover:border-emerald-400 hover:scale-[1.01] transition-all group"
+                style="background: rgba(15, 23, 42, 0.45); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);"
+            >
+                <div>
+                    <div class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
+                        <span>Teslimata Hazır</span>
+                        <i class="fa-solid fa-arrow-right text-[10px] text-emerald-400 opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                    <div class="text-2xl sm:text-3xl font-display font-black text-white mt-1">
+                        <%= readyCount %> <span class="text-xs sm:text-sm font-normal text-slate-300">Araç</span>
+                    </div>
+                    <div class="text-[11px] sm:text-xs text-emerald-300 font-semibold mt-1">
+                        Bakım & Yıkama Tamamlandı
+                    </div>
+                </div>
+                <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/30 flex items-center justify-center text-lg sm:text-xl shadow-inner group-hover:scale-110 transition-transform shrink-0">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
 
-                        <!-- WhatsApp Onay Durumu Rozeti -->
-                        <div id="approval-badge-<%= car.id %>" class="mt-4">
+        </div>
+
+        <!-- İstasyondaki Araçlara Geçiş Kartı (Hızlı Aksiyon & Zarif Buzlu Cam Banner) -->
+        <div class="p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-white/20 shadow-xl backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4" style="background: rgba(15, 23, 42, 0.45); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);">
+            <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-xl sm:rounded-2xl bg-white/10 text-white border border-white/15 flex items-center justify-center text-xl shrink-0">
+                    <i class="fa-solid fa-car-tunnel"></i>
+                </div>
+                <div>
+                    <h2 class="text-base font-display font-bold text-white">İstasyondaki Araçları & Liftleri Gör</h2>
+                    <p class="text-xs sm:text-sm text-slate-300 mt-0.5">5 liftin anlık durumunu, teşhis notlarını ve WhatsApp müşteri onaylarını inceleyin.</p>
+                </div>
+            </div>
+            <button 
+                type="button" 
+                onclick="toggleDashboardView('vehicles')"
+                class="bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-950 px-5 py-3 rounded-xl font-black text-xs sm:text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer self-stretch sm:self-auto shrink-0 border-2 border-white hover:scale-[1.02] active:scale-[0.98]"
+            >
+                <span>Araçları Gör (<%= activeCars.length %> Aktif Araç)</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- GÖRÜNÜM 2: İSTASYONDAKİ ARAÇLAR & LİFTLER EKRANI          -->
+    <!-- (Ferah aralıklı, mobil uyumlu, lift kartları gizli)       -->
+    <!-- ========================================================= -->
+    <div id="dashboard-view-vehicles" class="hidden space-y-6 sm:space-y-8">
+
+        <!-- Üst Geçiş Barı ve Geri Dönüş Butonu -->
+        <div class="p-4 sm:p-5.5 rounded-2xl sm:rounded-3xl border border-white/20 backdrop-blur-xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6" style="background: rgba(15, 23, 42, 0.45); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);">
+            <div class="flex items-center gap-3.5 sm:gap-4 min-w-0">
+                <button 
+                    type="button" 
+                    onclick="toggleDashboardView('desk')" 
+                    class="px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-xs sm:text-sm flex items-center gap-2 border border-white/15 transition-all cursor-pointer shadow-sm shrink-0"
+                    title="Usta Masası Özetine Geri Dön"
+                >
+                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                    <span class="hidden xs:inline">Usta Masasına</span><span>Dön</span>
+                </button>
+                <div class="min-w-0 space-y-1">
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <h2 class="text-base sm:text-xl font-display font-black text-white tracking-tight flex items-center gap-2">
+                            <i class="fa-solid fa-car-side text-emerald-400"></i>
+                            <span>İstasyondaki Araçlar & Liftler</span>
+                        </h2>
+                        <span class="px-3 py-1 rounded-full text-[10px] sm:text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 inline-flex items-center gap-1.5 shadow-xs">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span><%= activeCars.length %> Dolu / <%= emptySlots %> Boş Lift</span>
+                        </span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-300 truncate">Liftteki araçları yönetin, arıza teşhisi girin veya WhatsApp müşteri onaylarını inceleyin.</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                <button 
+                    type="button" 
+                    onclick="document.getElementById('new-car-modal').classList.remove('hidden')" 
+                    class="px-5 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 active:scale-95 text-white font-black text-xs sm:text-sm transition-all shadow-md shadow-emerald-950/40 flex items-center gap-2.5 border border-emerald-400/40 cursor-pointer"
+                >
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    <span>Yeni Araç Kabul Et</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Hızlı Durum Filtre Butonları (Ferah Aralıklı & Tıklanabilir) -->
+        <div class="flex items-center gap-2.5 sm:gap-3.5 overflow-x-auto py-1.5 hide-scrollbar text-xs font-bold -mx-1 px-1">
+            <button 
+                type="button" 
+                data-filter="all"
+                onclick="filterStationCards('all', this)" 
+                class="station-filter-pill px-4 py-2.5 rounded-xl bg-white text-slate-950 shadow-md font-black cursor-pointer transition-all flex items-center gap-2.5 shrink-0 border border-white"
+            >
+                <span>Tüm İstasyonlar</span>
+                <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-slate-900 text-white font-mono"><%= totalCapacity %></span>
+            </button>
+            <button 
+                type="button" 
+                data-filter="waiting"
+                onclick="filterStationCards('waiting', this)" 
+                class="station-filter-pill px-4 py-2.5 rounded-xl bg-slate-900/50 hover:bg-slate-800/80 text-slate-300 hover:text-white cursor-pointer transition-all flex items-center gap-2.5 shrink-0 border border-white/15 backdrop-blur-md"
+            >
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span>Bekliyor</span>
+                <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-white/10 text-amber-300 font-mono"><%= waitingCount %></span>
+            </button>
+            <button 
+                type="button" 
+                data-filter="repairing"
+                onclick="filterStationCards('repairing', this)" 
+                class="station-filter-pill px-4 py-2.5 rounded-xl bg-slate-900/50 hover:bg-slate-800/80 text-slate-300 hover:text-white cursor-pointer transition-all flex items-center gap-2.5 shrink-0 border border-white/15 backdrop-blur-md"
+            >
+                <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+                <span>Onarımda</span>
+                <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-white/10 text-sky-300 font-mono"><%= repairingCount %></span>
+            </button>
+            <button 
+                type="button" 
+                data-filter="diagnosing"
+                onclick="filterStationCards('diagnosing', this)" 
+                class="station-filter-pill px-4 py-2.5 rounded-xl bg-slate-900/50 hover:bg-slate-800/80 text-slate-300 hover:text-white cursor-pointer transition-all flex items-center gap-2.5 shrink-0 border border-white/15 backdrop-blur-md"
+            >
+                <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+                <span>Teşhiste</span>
+                <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-white/10 text-purple-300 font-mono"><%= diagnosingCount %></span>
+            </button>
+            <button 
+                type="button" 
+                data-filter="ready"
+                onclick="filterStationCards('ready', this)" 
+                class="station-filter-pill px-4 py-2.5 rounded-xl bg-slate-900/50 hover:bg-slate-800/80 text-slate-300 hover:text-white cursor-pointer transition-all flex items-center gap-2.5 shrink-0 border border-white/15 backdrop-blur-md"
+            >
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Hazır</span>
+                <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-white/10 text-emerald-300 font-mono"><%= readyCount %></span>
+            </button>
+            <button 
+                type="button" 
+                data-filter="empty"
+                onclick="filterStationCards('empty', this)" 
+                class="station-filter-pill px-4 py-2.5 rounded-xl bg-slate-900/50 hover:bg-slate-800/80 text-slate-300 hover:text-white cursor-pointer transition-all flex items-center gap-2.5 shrink-0 border border-white/15 backdrop-blur-md"
+            >
+                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                <span>Boş İstasyon</span>
+                <span class="px-1.5 py-0.5 rounded-md text-[10px] bg-white/10 text-slate-300 font-mono"><%= emptySlots %></span>
+            </button>
+        </div>
+
+        <!-- 5 Lift / İstasyon Izgarası (Ferah ve Geniş Aralıklı) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 sm:gap-6">
+            
+            <% if (activeCars && activeCars.length > 0) { %>
+                <% activeCars.forEach((car, idx) => { %>
+                    <% 
+                        // Durum sınıfı belirleme
+                        let cardStatus = 'repairing';
+                        if (car.hasPendingApproval) {
+                            cardStatus = 'waiting';
+                        } else if (car.status === 'INSPECTING') {
+                            cardStatus = 'diagnosing';
+                        } else if (car.status === 'READY') {
+                            cardStatus = 'ready';
+                        } else if (car.status === 'RECEIVED') {
+                            cardStatus = 'waiting';
+                        }
+
+                        // Yüzde ve aşama etiketi hesaplama
+                        let pct = 20;
+                        let stageLabel = 'Kabul Edildi';
+                        if (car.hasPendingApproval) {
+                            pct = 40;
+                            stageLabel = 'Parça Onayı Bekleniyor';
+                        } else if (car.status === 'INSPECTING') {
+                            pct = 30;
+                            stageLabel = 'Arıza Teşhisi Yapılıyor';
+                        } else if (car.status === 'WAITING_PARTS') {
+                            pct = 50;
+                            stageLabel = 'Yedek Parça Bekleniyor';
+                        } else if (car.status === 'REPAIRING') {
+                            pct = 70;
+                            stageLabel = 'Mekanik Onarımda';
+                        } else if (car.status === 'TESTING') {
+                            pct = 85;
+                            stageLabel = 'Son Kontrol & Test';
+                        } else if (car.status === 'READY') {
+                            pct = 100;
+                            stageLabel = 'Teslimata Hazır';
+                        }
+
+                        // Parça onaylarından toplam tutar
+                        const totalApproved = (car.approvals || []).reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+                    %>
+
+                    <div 
+                        id="car-card-<%= car.id %>"
+                        data-station-status="<%= cardStatus %>"
+                        class="border border-white/15 hover:border-sky-400/60 rounded-3xl flex flex-col shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group overflow-hidden text-white backdrop-blur-xl"
+                        style="background: rgba(15, 23, 42, 0.48); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);"
+                    >
+                        <!-- Üst İstasyon Başlığı & Durum Rozeti (Yazısız sade İstasyon numarası) -->
+                        <div class="px-5 py-3.5 border-b border-white/10 bg-white/[0.04] flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full <%= car.status === 'READY' ? 'bg-emerald-400' : (car.hasPendingApproval ? 'bg-amber-400 animate-pulse' : 'bg-sky-400') %>"></span>
+                                <span class="font-extrabold text-white text-xs sm:text-sm">İstasyon 0<%= idx + 1 %></span>
+                            </div>
+                            
                             <% if (car.hasPendingApproval) { %>
-                                <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-800 text-xs font-semibold flex items-center justify-between">
-                                    <span class="flex items-center gap-1.5">
-                                        <i class="fa-brands fa-whatsapp text-sm text-emerald-600"></i>
-                                        WhatsApp Onayı
-                                    </span>
-                                    <span class="text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded font-bold">BEKLEMEDE</span>
-                                </div>
-                            <% } else if (car.hasApproved) { %>
-                                <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold flex items-center justify-between">
-                                    <span class="flex items-center gap-1.5">
-                                        <i class="fa-solid fa-check-double text-sm text-emerald-600"></i>
-                                        Parça Onaylandı
-                                    </span>
-                                    <span class="text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded font-bold">MONTAJ</span>
-                                </div>
+                                <span class="badge badge-amber inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-400/40 shadow-xs">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                    <span>Bekliyor</span>
+                                </span>
+                            <% } else if (car.status === 'REPAIRING') { %>
+                                <span class="badge badge-blue inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-sky-500/20 text-sky-300 border border-sky-400/40 shadow-xs">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
+                                    <span>Onarımda</span>
+                                </span>
+                            <% } else if (car.status === 'READY') { %>
+                                <span class="badge badge-green inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-xs">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                    <span>Hazır</span>
+                                </span>
+                            <% } else if (car.status === 'RECEIVED') { %>
+                                <span class="badge badge-blue inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-sky-500/20 text-sky-300 border border-sky-400/40 shadow-xs">
+                                    <span>Kabul Edildi</span>
+                                </span>
+                            <% } else if (car.status === 'INSPECTING') { %>
+                                <span class="badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-purple-500/20 text-purple-300 border border-purple-400/40 shadow-xs">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+                                    <span>Teşhiste</span>
+                                </span>
+                            <% } else if (car.status === 'TESTING') { %>
+                                <span class="badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-400/40 shadow-xs">
+                                    <span>Testte</span>
+                                </span>
+                            <% } else { %>
+                                <span class="badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-white/10 text-slate-300 border border-white/15">
+                                    <span>İşlemde</span>
+                                </span>
                             <% } %>
                         </div>
 
-                        <!-- Alt Buton: İşlem Masası -->
-                        <div class="mt-5 pt-4 border-t border-gray-100 mt-auto">
-                            <a 
-                                href="/arac/<%= car.id %>" 
-                                class="w-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                            >
-                                <span>İşlem Masası & Detay</span>
-                                <i class="fa-solid fa-arrow-right text-xs text-gray-400"></i>
-                            </a>
+                        <!-- Kart Gövdesi -->
+                        <div class="p-5 sm:p-5.5 flex-1 flex flex-col justify-between space-y-4">
+                            <div>
+                                <!-- Türk Standart Plakası -->
+                                <div class="plate inline-flex items-stretch border-2 border-slate-900 rounded-lg overflow-hidden bg-white shadow-md font-mono font-black text-xs leading-none select-none max-w-full mb-2">
+                                    <div class="plate-tr bg-blue-700 text-white px-1.5 py-1 flex flex-col justify-between items-center text-[8px] font-bold">
+                                        <span class="text-[6px] opacity-75">★</span>
+                                        <span>TR</span>
+                                    </div>
+                                    <div class="plate-num px-2.5 py-1 text-slate-950 font-black tracking-wider text-xs sm:text-sm flex items-center font-mono"><%= car.plate %></div>
+                                </div>
+                                
+                                <!-- Araç Modeli -->
+                                <div class="font-display font-black text-white text-base sm:text-lg group-hover:text-amber-300 transition-colors tracking-tight truncate mt-1">
+                                    <%= car.car_model %>
+                                </div>
+                                
+                                <!-- Kilometre & Teslimat Zamanı -->
+                                <div class="text-xs text-slate-400 font-medium flex items-center gap-2 mt-1">
+                                    <% if (car.mileage) { %>
+                                        <span class="flex items-center gap-1"><i class="fa-solid fa-gauge-simple text-slate-400"></i><%= Number(car.mileage).toLocaleString('tr-TR') %> KM</span>
+                                        <span>•</span>
+                                    <% } %>
+                                    <span class="text-slate-300 flex items-center gap-1"><i class="fa-regular fa-clock text-slate-400"></i><%= car.estimated_delivery || 'Bugün' %></span>
+                                </div>
+                            </div>
+
+                            <!-- Müşteri & WhatsApp Hattı -->
+                            <div class="p-2.5 sm:p-3 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between text-xs gap-2">
+                                <span class="flex items-center gap-2 font-bold text-slate-200 truncate text-xs">
+                                    <i class="fa-regular fa-user text-slate-400"></i>
+                                    <span><%= car.customer_name || 'Müşteri' %></span>
+                                </span>
+                                <a 
+                                    href="https://wa.me/<%= car.customer_phone ? car.customer_phone.replace(/\D/g, '') : '' %>" 
+                                    target="_blank" 
+                                    class="text-[11px] text-emerald-400 font-mono font-bold flex items-center gap-1.5 shrink-0 hover:text-emerald-300"
+                                    title="WhatsApp Sohbeti Başlat"
+                                >
+                                    <i class="fa-brands fa-whatsapp text-emerald-400"></i>
+                                    <span><%= car.customer_phone %></span>
+                                </a>
+                            </div>
+
+                            <!-- Şikayet / Arıza Teşhis Notu -->
+                            <div class="p-3 sm:p-3.5 rounded-xl bg-black/40 border border-white/10 text-xs text-slate-300 leading-relaxed space-y-1">
+                                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-stethoscope text-sky-400"></i>
+                                    <span>Arıza / Teşhis Notu:</span>
+                                </div>
+                                <p class="line-clamp-2 text-xs text-slate-300 leading-relaxed">
+                                    <%= car.diagnostic_notes || car.initial_complaint || 'Periyodik kontrol ve arıza tespiti yapılıyor.' %>
+                                </p>
+                            </div>
+
+                            <!-- WhatsApp Onay Durumu Rozeti -->
+                            <div id="approval-badge-<%= car.id %>">
+                                <% if (car.hasPendingApproval) { %>
+                                    <div class="p-2.5 rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-semibold flex items-center justify-between">
+                                        <span class="flex items-center gap-1.5">
+                                            <i class="fa-brands fa-whatsapp text-sm text-emerald-400"></i>
+                                            WhatsApp Onayı
+                                        </span>
+                                        <span class="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-bold">BEKLEMEDE</span>
+                                    </div>
+                                <% } else if (car.hasApproved) { %>
+                                    <div class="p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold flex items-center justify-between">
+                                        <span class="flex items-center gap-1.5">
+                                            <i class="fa-solid fa-check-double text-sm text-emerald-400"></i>
+                                            Parça Onaylandı
+                                        </span>
+                                        <span class="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold">MONTAJ</span>
+                                    </div>
+                                <% } %>
+                            </div>
+
+                            <!-- İlerleme Çubuğu -->
+                            <div class="space-y-1.5 pt-1">
+                                <div class="flex items-center justify-between text-[11px] font-bold">
+                                    <span class="text-slate-400"><%= stageLabel %></span>
+                                    <span class="text-white font-mono font-bold">%<%= pct %></span>
+                                </div>
+                                <div class="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+                                    <div class="h-full rounded-full transition-all duration-500 <%= car.status === 'READY' ? 'bg-emerald-500' : (car.hasPendingApproval ? 'bg-amber-500' : 'bg-sky-500') %>" style="width: <%= pct %>%;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Alt Alan: Tutar & İşlem Masası Butonu -->
+                            <div class="pt-4 border-t border-white/10 space-y-3 mt-auto">
+                                <div class="flex items-baseline justify-between">
+                                    <span class="text-[11px] text-slate-400 uppercase font-black tracking-wider">Tahmini Tutar</span>
+                                    <span class="font-mono font-black text-xl text-white tracking-tight">
+                                        <%= totalApproved > 0 ? totalApproved.toLocaleString('tr-TR') + ' ₺' : 'Teklif Bekleniyor' %>
+                                    </span>
+                                </div>
+
+                                <a 
+                                    href="/arac/<%= car.id %>" 
+                                    class="w-full bg-white/10 hover:bg-sky-600 active:scale-95 text-white px-4 py-3 rounded-xl font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2.5 cursor-pointer border border-white/15 hover:border-sky-400/50"
+                                >
+                                    <i class="fa-solid fa-sliders text-xs text-white/80"></i>
+                                    <span>İşlem Masasını Aç</span>
+                                    <i class="fa-solid fa-arrow-right text-[10px] text-white/60 group-hover:translate-x-1 transition-transform"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </div>
-            <% }); %>
-        <% } %>
+                <% }); %>
+            <% } %>
 
-        <!-- Boş İstasyon Kartları (Toplamda en az 4 slot tamamlamak için) -->
-        <% const emptySlots = Math.max(0, 4 - (cars ? cars.length : 0)); %>
-        <% for (let i = 1; i <= emptySlots; i++) { %>
-            <div 
-                onclick="document.getElementById('new-car-modal').classList.remove('hidden')"
-                class="bg-white/40 border-2 border-dashed border-gray-200 hover:border-gray-300 rounded-2xl flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-all min-h-[300px] group"
-            >
-                <div class="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-gray-600 transition-colors mb-3 shadow-xs">
-                    <i class="fa-solid fa-plus"></i>
+            <!-- Boş İstasyon Kartları (Kapasiteyi 5'e tamamlamak için) -->
+            <% for (let i = 1; i <= emptySlots; i++) { %>
+                <% const stationNum = activeCars.length + i; %>
+                <div 
+                    id="station-card-empty-<%= i %>"
+                    data-station-status="empty"
+                    onclick="document.getElementById('new-car-modal').classList.remove('hidden')"
+                    class="station-card border-2 border-dashed border-white/20 hover:border-emerald-400/60 rounded-3xl flex flex-col items-center justify-between p-6 sm:p-7 text-center cursor-pointer transition-all duration-300 min-h-[420px] shadow-lg hover:shadow-2xl hover:-translate-y-1 backdrop-blur-xl group text-white space-y-6"
+                    style="background: rgba(15, 23, 42, 0.35); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);"
+                >
+                    <div class="w-full flex justify-between items-center text-xs">
+                        <span class="font-extrabold text-slate-400 text-xs">İstasyon 0<%= stationNum %></span>
+                        <span class="badge inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold bg-white/10 text-slate-300 border border-white/15">Boş</span>
+                    </div>
+
+                    <div class="my-auto py-8 flex flex-col items-center space-y-3">
+                        <div class="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white flex items-center justify-center transition-all duration-300 mb-2 shadow-inner border border-emerald-400/30 group-hover:scale-110">
+                            <i class="fa-solid fa-plus text-2xl"></i>
+                        </div>
+                        <div class="font-display font-black text-white text-base sm:text-lg">İstasyon 0<%= stationNum %> Boş</div>
+                        <p class="text-xs text-slate-400 max-w-[210px] leading-relaxed">Bu lift şu anda müsait. Yeni bir araç kabul edebilirsiniz.</p>
+                        <span class="mt-2 px-3.5 py-1 rounded-full bg-slate-900 text-white text-[10px] font-black shadow-xs tracking-wider uppercase font-mono border border-white/15">
+                            Kapasite: <%= totalCapacity %> Lift
+                        </span>
+                    </div>
+
+                    <button 
+                        type="button" 
+                        class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-xs sm:text-sm py-3 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer border border-emerald-400/40"
+                    >
+                        <i class="fa-solid fa-car-tunnel text-xs"></i>
+                        <span>+ Araç Kabul Et</span>
+                    </button>
                 </div>
-                <div class="font-display font-bold text-gray-800 text-base">Boş İstasyon</div>
-                <div class="text-xs text-gray-400 mt-1">Yeni araç kabul etmek için tıklayın.</div>
-            </div>
-        <% } %>
+            <% } %>
+
+        </div>
+
     </div>
 
 </div>
 
-<!-- YENİ ARAÇ KABUL MODALI (Modern ve Açık Tema) -->
-<div id="new-car-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 hidden">
-    <div class="w-full max-w-lg bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-2xl relative">
+<!-- YENİ ARAÇ KABUL MODALI (Buzlu Koyu Kristal Tema) -->
+<div id="new-car-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 hidden">
+    <div class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative text-white">
         
-        <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
-            <h2 class="text-lg sm:text-xl font-display font-extrabold text-gray-900 flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-sm">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+            <h2 class="text-lg sm:text-xl font-display font-extrabold text-white flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-400/30 flex items-center justify-center text-sm">
                     <i class="fa-solid fa-car"></i>
                 </div>
                 <span>Yeni Araç Kabulü (İş Emri)</span>
             </h2>
             <button 
+                type="button"
                 onclick="document.getElementById('new-car-modal').classList.add('hidden')"
-                class="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-black flex items-center justify-center transition-colors cursor-pointer"
+                class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
             >
                 <i class="fa-solid fa-xmark"></i>
             </button>
@@ -191,91 +537,92 @@
         <form action="/arac/yeni" method="POST" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">Plaka *</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Plaka *</label>
                     <input 
                         type="text" 
                         name="plate" 
                         required 
                         placeholder="34 BCD 128" 
-                        class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm font-mono font-bold uppercase focus:bg-white focus:border-sky-600 focus:outline-none transition-colors"
+                        class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm font-mono font-bold uppercase focus:border-sky-500 focus:outline-none transition-colors"
                     >
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">Araç Modeli *</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Araç Modeli *</label>
                     <input 
                         type="text" 
                         name="car_model" 
                         required 
                         placeholder="Dacia Sandero 1.0 TCE" 
-                        class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:bg-white focus:border-sky-600 focus:outline-none transition-colors"
+                        class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-sky-500 focus:outline-none transition-colors"
                     >
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">Müşteri Telefonu (WhatsApp) *</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Müşteri Telefonu (WhatsApp) *</label>
                     <input 
                         type="text" 
                         name="customer_phone" 
                         required 
                         placeholder="0532 111 22 33" 
-                        class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:bg-white focus:border-sky-600 focus:outline-none transition-colors"
+                        class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-sky-500 focus:outline-none transition-colors"
                     >
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">Müşteri Adı Soyadı</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Müşteri Adı Soyadı</label>
                     <input 
                         type="text" 
                         name="customer_name" 
                         placeholder="Mehmet Yılmaz" 
-                        class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:bg-white focus:border-sky-600 focus:outline-none transition-colors"
+                        class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-sky-500 focus:outline-none transition-colors"
                     >
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">Lift / İstasyon</label>
-                    <select name="station" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:bg-white focus:border-sky-600 focus:outline-none transition-colors">
-                        <option value="İstasyon 01 Mekanik">İstasyon 01 (Mekanik)</option>
-                        <option value="İstasyon 02 Ağır Bakım">İstasyon 02 (Ağır Bakım)</option>
-                        <option value="İstasyon 03 Yıkama/Test">İstasyon 03 (Yıkama & Test)</option>
-                        <option value="İstasyon 04 Genel">İstasyon 04 (Genel)</option>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Lift / İstasyon</label>
+                    <select name="station" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-sky-500 focus:outline-none transition-colors">
+                        <option value="İstasyon 01">İstasyon 01</option>
+                        <option value="İstasyon 02">İstasyon 02</option>
+                        <option value="İstasyon 03">İstasyon 03</option>
+                        <option value="İstasyon 04">İstasyon 04</option>
+                        <option value="İstasyon 05">İstasyon 05</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">Tahmini Teslimat</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Tahmini Teslimat</label>
                     <input 
                         type="text" 
                         name="estimated_delivery" 
                         placeholder="Bugün 17:30" 
-                        class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:bg-white focus:border-sky-600 focus:outline-none transition-colors"
+                        class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-sky-500 focus:outline-none transition-colors"
                     >
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">Müşteri Şikayeti / Arıza Notu</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Müşteri Şikayeti / Arıza Notu</label>
                 <textarea 
                     name="initial_complaint" 
                     rows="2" 
                     placeholder="Ön takımdan lokurtu sesi geliyor, yağ kaçağı var..." 
-                    class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:bg-white focus:border-sky-600 focus:outline-none transition-colors"
+                    class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-sky-500 focus:outline-none transition-colors"
                 ></textarea>
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
                 <button 
                     type="button" 
                     onclick="document.getElementById('new-car-modal').classList.add('hidden')"
-                    class="px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs transition-colors cursor-pointer"
+                    class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors cursor-pointer"
                 >
                     Vazgeç
                 </button>
                 <button 
                     type="submit" 
-                    class="bg-gray-900 hover:bg-black text-white px-5 py-2.5 rounded-xl font-semibold text-xs shadow-xs transition-all cursor-pointer"
+                    class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer"
                 >
                     İş Emrini Başlat
                 </button>
@@ -284,3 +631,62 @@
 
     </div>
 </div>
+
+<!-- İstemci Etkileşim Scriptleri (Görünüm Geçişi & İstasyon Filtreleme) -->
+<script>
+    function toggleDashboardView(view) {
+        const deskView = document.getElementById('dashboard-view-desk');
+        const vehiclesView = document.getElementById('dashboard-view-vehicles');
+        const deskTabBtn = document.getElementById('tab-btn-desk-home');
+        const vehiclesTabBtn = document.getElementById('tab-btn-desk-vehicles');
+
+        if (!deskView || !vehiclesView) return;
+
+        if (view === 'vehicles') {
+            deskView.classList.add('hidden');
+            vehiclesView.classList.remove('hidden');
+
+            if (deskTabBtn) {
+                deskTabBtn.className = 'flex-1 sm:flex-none justify-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer text-slate-300 hover:text-white hover:bg-white/10';
+            }
+            if (vehiclesTabBtn) {
+                vehiclesTabBtn.className = 'flex-1 sm:flex-none justify-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer bg-white text-slate-950 shadow-md';
+            }
+        } else {
+            deskView.classList.remove('hidden');
+            vehiclesView.classList.add('hidden');
+
+            if (deskTabBtn) {
+                deskTabBtn.className = 'flex-1 sm:flex-none justify-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer bg-white text-slate-950 shadow-md';
+            }
+            if (vehiclesTabBtn) {
+                vehiclesTabBtn.className = 'flex-1 sm:flex-none justify-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer text-slate-300 hover:text-white hover:bg-white/10';
+            }
+        }
+    }
+
+    function filterStationCards(status, btn) {
+        const pills = document.querySelectorAll('.station-filter-pill');
+        pills.forEach(p => {
+            p.className = 'station-filter-pill px-4 py-2.5 rounded-xl bg-slate-900/50 hover:bg-slate-800/80 text-slate-300 hover:text-white cursor-pointer transition-all flex items-center gap-2.5 shrink-0 border border-white/15 backdrop-blur-md';
+        });
+
+        let targetBtn = btn;
+        if (!targetBtn) {
+            targetBtn = document.querySelector(`.station-filter-pill[data-filter="${status}"]`);
+        }
+        if (targetBtn) {
+            targetBtn.className = 'station-filter-pill px-4 py-2.5 rounded-xl bg-white text-slate-950 shadow-md font-black cursor-pointer transition-all flex items-center gap-2.5 shrink-0 border border-white';
+        }
+
+        const cards = document.querySelectorAll('.station-card');
+        cards.forEach(card => {
+            const cardStatus = card.getAttribute('data-station-status');
+            if (status === 'all' || cardStatus === status) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+</script>

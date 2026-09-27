@@ -467,10 +467,10 @@
 
 </div>
 
-<!-- YENİ PARÇA ONAY TALEBİ MODALI -->
+<!-- YENİ PARÇA ONAY TALEBİ MODALI (Gelişmiş Hızlı Parça Seçici & Orijinal/Yan Sanayi) -->
 <div id="new-approval-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 hidden">
-    <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative">
-        <div class="flex items-center justify-between mb-6">
+    <div class="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative">
+        <div class="flex items-center justify-between mb-5 pb-3 border-b border-slate-800">
             <h2 class="text-lg font-bold text-white flex items-center gap-2">
                 <i class="fa-brands fa-whatsapp text-emerald-500 text-xl"></i>
                 <span>Parça Onayı Gönder</span>
@@ -478,29 +478,123 @@
             <button 
                 type="button" 
                 onclick="document.getElementById('new-approval-modal').classList.add('hidden')"
-                class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+                class="w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
             >
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
         <form action="/arac/<%= vehicle.id %>/onay-talep" method="POST" class="space-y-4">
+            
+            <!-- Hızlı Parça ve Kalite Seçimi -->
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Hızlı Parça Seçimi
+                    </label>
+                    <div class="flex items-center gap-1.5">
+                        <button 
+                            type="button" 
+                            id="btn-quality-original"
+                            onclick="toggleApprovalQuality('Orijinal')" 
+                            class="px-2 py-0.5 rounded-md font-bold transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 cursor-pointer text-[10px]"
+                        >
+                            ⭐ Orijinal
+                        </button>
+                        <button 
+                            type="button" 
+                            id="btn-quality-muadil"
+                            onclick="toggleApprovalQuality('Yan Sanayi')" 
+                            class="px-2 py-0.5 rounded-md font-bold transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 cursor-pointer text-[10px]"
+                        >
+                            🔄 Yan Sanayi
+                        </button>
+                    </div>
+                </div>
+
+                <select 
+                    id="approval-quick-part" 
+                    onchange="applyQuickPart(this.value)"
+                    class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs focus:border-emerald-500 focus:outline-none transition-colors cursor-pointer"
+                >
+                    <option value="">-- Listeden Hızlı Seç (Balata, Disk, Amortisör...) --</option>
+                    <optgroup label="Fren Sistemi">
+                        <option value="Ön Fren Balatası">Ön Fren Balatası</option>
+                        <option value="Arka Fren Balatası">Arka Fren Balatası</option>
+                        <option value="Ön Fren Diski">Ön Fren Diski</option>
+                        <option value="Arka Fren Kampanası">Arka Fren Kampanası</option>
+                        <option value="Fren Kaliperi & Hortumu">Fren Kaliperi & Hortumu</option>
+                    </optgroup>
+                    <optgroup label="Süspansiyon & Ön Takım">
+                        <option value="Ön Amortisör">Ön Amortisör</option>
+                        <option value="Arka Amortisör">Arka Amortisör</option>
+                        <option value="Amortisör Takozu & Bilyası">Amortisör Takozu & Bilyası</option>
+                        <option value="Alt Salıncak Takımı">Alt Salıncak Takımı</option>
+                        <option value="Z-Rot & Rot Başı">Z-Rot & Rot Başı</option>
+                        <option value="Rot Mili & Körüğü">Rot Mili & Körüğü</option>
+                    </optgroup>
+                    <optgroup label="Periyodik Bakım & Filtreler">
+                        <option value="Motor Yağı (5W-30 / 5W-40)">Motor Yağı (5W-30 / 5W-40)</option>
+                        <option value="Yağ & Hava Filtresi Seti">Yağ & Hava Filtresi Seti</option>
+                        <option value="Polen (Kabin) Filtresi">Polen (Kabin) Filtresi</option>
+                        <option value="Mazot / Yakıt Filtresi">Mazot / Yakıt Filtresi</option>
+                        <option value="Buji Takımı">Buji Takımı</option>
+                        <option value="Antifriz & Saf Su">Antifriz & Saf Su</option>
+                    </optgroup>
+                    <optgroup label="Motor & Mekanik">
+                        <option value="Triger Seti & Devirdaim">Triger Seti & Devirdaim</option>
+                        <option value="V Kayışı & Gergi Rulmanı">V Kayışı & Gergi Rulmanı</option>
+                        <option value="Ateşleme Bobini">Ateşleme Bobini</option>
+                        <option value="Debriyaj Baskı Balata & Rulman">Debriyaj Baskı Balata & Rulman</option>
+                        <option value="Akü (12V 72Ah / 60Ah)">Akü (12V 72Ah / 60Ah)</option>
+                    </optgroup>
+                    <optgroup label="İşçilik & Atölye">
+                        <option value="Mekanik Montaj İşçiliği">Mekanik Montaj İşçiliği</option>
+                        <option value="Disk Taşlama / Torna">Disk Taşlama / Torna</option>
+                        <option value="Ön Düzen / Rot Balans">Ön Düzen / Rot Balans</option>
+                    </optgroup>
+                    <optgroup label="Özel">
+                        <option value="Diğer">Diğer (Serbest Yazım)</option>
+                    </optgroup>
+                </select>
+            </div>
+
             <div>
                 <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Değişecek Parça Adı *</label>
-                <input type="text" name="part_name" required placeholder="Örn: Arka Fren Balatası" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-orange-500 focus:outline-none">
+                <input 
+                    type="text" 
+                    id="approval-part-name"
+                    name="part_name" 
+                    required 
+                    placeholder="Örn: Arka Fren Balatası" 
+                    class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-emerald-500 focus:outline-none transition-colors"
+                >
             </div>
 
             <div>
                 <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Parça Fiyatı (TL)</label>
                 <div class="relative">
-                    <input type="number" name="price" min="0" step="any" placeholder="Örn: 1850" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-orange-500 focus:outline-none">
+                    <input 
+                        type="number" 
+                        name="price" 
+                        min="0" 
+                        step="any" 
+                        placeholder="Örn: 1850" 
+                        class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-emerald-500 focus:outline-none font-mono transition-colors"
+                    >
                     <span class="absolute right-4 top-2.5 text-xs text-slate-500 font-bold">TL</span>
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Usta Açıklaması</label>
-                <textarea name="note" rows="2" placeholder="Örn: Mais Orijinal - Balata aşınmış, fren mesafesi uzuyor" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-orange-500 focus:outline-none"></textarea>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Usta Açıklaması / Not</label>
+                <textarea 
+                    id="approval-note"
+                    name="note" 
+                    rows="2" 
+                    placeholder="Örn: Aşınma sınırı aşılmış, frenleme mesafesi uzuyor. Değişimi önerilir." 
+                    class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-emerald-500 focus:outline-none transition-colors"
+                ></textarea>
             </div>
 
             <div class="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-xs text-orange-300 flex items-start gap-2.5">
@@ -512,13 +606,13 @@
                 <button 
                     type="button" 
                     onclick="document.getElementById('new-approval-modal').classList.add('hidden')"
-                    class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm transition-colors"
+                    class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-sm transition-colors cursor-pointer"
                 >
                     Vazgeç
                 </button>
                 <button 
                     type="submit" 
-                    class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-2"
+                    class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-2 cursor-pointer"
                 >
                     <i class="fa-brands fa-whatsapp text-base"></i>
                     <span>WhatsApp'a Gönder</span>
@@ -836,6 +930,55 @@
         const display = document.getElementById('receipt-total-display');
         if (display) {
             display.textContent = total.toLocaleString('tr-TR') + ' TL';
+        }
+    }
+
+    // Hızlı Parça Seçimi ve Orijinal / Yan Sanayi Yönetimi
+    let selectedApprovalQuality = '';
+    function toggleApprovalQuality(quality) {
+        const btnOrig = document.getElementById('btn-quality-original');
+        const btnMuadil = document.getElementById('btn-quality-muadil');
+        const nameInput = document.getElementById('approval-part-name');
+        
+        if (selectedApprovalQuality === quality) {
+            selectedApprovalQuality = '';
+            if (btnOrig) btnOrig.className = 'px-2 py-0.5 rounded-md font-bold transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 cursor-pointer text-[10px]';
+            if (btnMuadil) btnMuadil.className = 'px-2 py-0.5 rounded-md font-bold transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 cursor-pointer text-[10px]';
+        } else {
+            selectedApprovalQuality = quality;
+            if (quality === 'Orijinal') {
+                if (btnOrig) btnOrig.className = 'px-2 py-0.5 rounded-md font-bold transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 cursor-pointer text-[10px] shadow-xs';
+                if (btnMuadil) btnMuadil.className = 'px-2 py-0.5 rounded-md font-bold transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 cursor-pointer text-[10px]';
+            } else {
+                if (btnMuadil) btnMuadil.className = 'px-2 py-0.5 rounded-md font-bold transition-all bg-amber-500/20 text-amber-400 border border-amber-500/50 cursor-pointer text-[10px] shadow-xs';
+                if (btnOrig) btnOrig.className = 'px-2 py-0.5 rounded-md font-bold transition-all bg-slate-800 text-slate-400 hover:text-white border border-slate-700 cursor-pointer text-[10px]';
+            }
+        }
+
+        if (nameInput && nameInput.value) {
+            let baseName = nameInput.value.replace(/\s*\(Orijinal\)|\s*\(Yan Sanayi\)/g, '').trim();
+            if (selectedApprovalQuality) {
+                nameInput.value = `${baseName} (${selectedApprovalQuality})`;
+            } else {
+                nameInput.value = baseName;
+            }
+        }
+    }
+
+    function applyQuickPart(val) {
+        const nameInput = document.getElementById('approval-part-name');
+        if (!nameInput) return;
+
+        if (val === 'Diğer') {
+            nameInput.value = '';
+            nameInput.placeholder = 'Özel parça veya işlem adını yazın...';
+            nameInput.focus();
+        } else if (val) {
+            if (selectedApprovalQuality) {
+                nameInput.value = `${val} (${selectedApprovalQuality})`;
+            } else {
+                nameInput.value = val;
+            }
         }
     }
 
