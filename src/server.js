@@ -13,6 +13,8 @@ const authRoutes = require('./routes/auth.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const eventsRoutes = require('./routes/events.routes');
 const trackingRoutes = require('./routes/tracking.routes');
+const profileRoutes = require('./routes/profile.routes');
+const superadminRoutes = require('./routes/superadmin.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,7 +53,9 @@ app.use('/', authRoutes);
 app.use('/', trackingRoutes); // Herkese açık canlı müşteri takip rotası
 app.use('/', eventsRoutes);
 // Dashboard ve Araç detay sayfaları oturum kontrolüyle korunur
-app.use('/', requireAuth, dashboardRoutes);
+app.use('/', dashboardRoutes);
+app.use('/', profileRoutes);
+app.use('/', superadminRoutes);
 
 // Sunucuyu başlatan fonksiyon
 function startWebServer() {

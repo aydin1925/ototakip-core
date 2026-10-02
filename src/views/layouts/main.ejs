@@ -137,7 +137,7 @@
     <!-- ARKA PLAN FOTOĞRAFI & SİNEMATİK TİTANYUM MONOKROM KATMAN   -->
     <!-- ========================================================= -->
     <div id="hero-bg-container" class="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-        <!-- 1. Gerçek Atölye Fotoğrafı -->
+        <!-- 1. Gerçek Servis Fotoğrafı -->
         <div class="absolute inset-0 bg-cover bg-center bg-no-repeat scale-100"
              style="background-image: url('/images/workshop_hero.jpg');"></div>
         
@@ -149,6 +149,16 @@
         <div class="absolute inset-0"
              style="background: linear-gradient(180deg, rgba(8,10,15,0.50) 0%, transparent 20%, transparent 80%, rgba(8,10,15,0.85) 100%);"></div>
     </div>
+
+    <% if (typeof isImpersonated !== 'undefined' && isImpersonated) { %>
+        <!-- SÜPERADMIN IMPERSONATION BİLDİRİM BANDI -->
+        <div class="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black text-xs font-bold py-2 px-4 text-center sticky top-0 z-[60] flex items-center justify-center gap-3 shadow-md">
+            <span>⚠️ SüperAdmin Olarak Görüntüleniyor: <strong><%= currentWorkshop ? currentWorkshop.workshop_name : 'Servis' %></strong></span>
+            <a href="/superadmin" class="bg-black text-white px-3 py-1 rounded-lg text-[11px] font-semibold hover:bg-zinc-800 transition">
+                SüperAdmin Konsoluna Dön &rarr;
+            </a>
+        </div>
+    <% } %>
 
     <!-- Üst Menü / Navbar -->
     <%- include('../partials/navbar') %>

@@ -26,7 +26,7 @@ function login(req, res) {
         // Servis katmanında şifre ve telefon doğrulaması yap
         const workshop = authService.login(identifier, password);
 
-        // Doğrulama başarılı! Session'a atölye bilgilerini mühürle
+        // Doğrulama başarılı! Session'a servis bilgilerini mühürle
         req.session.workshopId = workshop.id;
         req.session.workshop = workshop;
 
@@ -62,7 +62,7 @@ function showRegisterForm(req, res) {
  */
 function register(req, res) {
     try {
-        // Servis katmanında yeni atölyeyi veritabanına kaydet
+        // Servis katmanında yeni servisi veritabanına kaydet
         const workshop = authService.register(req.body);
 
         // Kayıt olur olmaz ustayı otomatik olarak sisteme giriş yaptır

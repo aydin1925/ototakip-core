@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const dashboardController = require('../controllers/dashboardController');
 const upload = require('../middlewares/upload');
+const requireAuth = require('../middlewares/requireAuth');
+
+// Yalnızca dashboard, arşiv ve araç işlemlerini requireAuth ile koru
+router.use(['/dashboard', '/arsiv', '/arac'], requireAuth);
 
 // Lift Paneli
 router.get('/dashboard', dashboardController.showDashboard);

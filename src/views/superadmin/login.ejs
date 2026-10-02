@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="tr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Manrope', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-[#090b10] text-slate-100 flex items-center justify-center p-4 relative overflow-hidden font-sans">
+    
+    <!-- Arka Plan Efekti -->
+    <div class="fixed inset-0 pointer-events-none -z-10">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-sky-900/20 via-[#090b10] to-[#090b10]"></div>
+    </div>
+
+    <div class="w-full max-w-md">
+        <!-- Logo & Başlık -->
+        <div class="text-center mb-8">
+            <div class="inline-flex w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 to-blue-600 items-center justify-center text-white text-xl shadow-lg shadow-sky-500/30 mb-4">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h1 class="font-display font-extrabold text-2xl text-white tracking-tight">SüperAdmin Konsolu</h1>
+            <p class="text-xs text-zinc-500 mt-1">Platform Yönetim & Telemetri Portalı</p>
+        </div>
+
+        <!-- Kart -->
+        <div class="bg-white/[0.03] border border-white/10 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl space-y-6">
+            <% if (error) { %>
+                <div class="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-2.5">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span><%= error %></span>
+                </div>
+            <% } %>
+
+            <form action="/superadmin/login" method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Yönetici Kullanıcı Adı</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-xs"></i>
+                        <input type="text" name="username" required placeholder="admin" autofocus class="w-full bg-[#0d1117] border border-white/10 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Güvenlik Şifresi</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 text-xs"></i>
+                        <input type="password" name="password" required placeholder="••••••••" class="w-full bg-[#0d1117] border border-white/10 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30">
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-sky-500/20 transition-all flex items-center justify-center gap-2">
+                        <span>Konsola Giriş Yap</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="text-center mt-6 text-[11px] text-zinc-600">
+            <a href="/" class="hover:text-zinc-400 transition">&larr; Ana Sayfaya Dön</a>
+        </div>
+    </div>
+</body>
+</html>

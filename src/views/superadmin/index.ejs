@@ -1,0 +1,1488 @@
+<!-- SÜPERADMIN KONSOLU ANA GÖVDE (TAM DİNAMİK CANLI VERİLER) -->
+<div class="space-y-6">
+
+    <!-- ━━━━ ROW 1: PLATFORM METRİK KARTLARI ━━━━ -->
+    <section id="platform-metrics-section" class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <!-- Kart 1: Kayıtlı Servisler -->
+        <div class="admin-card p-3.5 sm:p-5">
+            <div class="flex items-center justify-between text-xs text-zinc-400 font-medium">
+                <span>Kayıtlı Servisler</span>
+                <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+            </div>
+            <div class="mt-2.5 sm:mt-3 flex items-baseline gap-1.5 sm:gap-2">
+                <span class="text-xl sm:text-3xl font-extrabold font-display text-white"><%= totalServices %></span>
+                <span class="text-[11px] sm:text-xs text-zinc-500">Servis</span>
+            </div>
+            <div class="text-[10px] sm:text-[11px] text-emerald-400 mt-2 flex items-center gap-1 font-mono truncate">
+                <i class="fa-solid fa-circle-check text-[9px] sm:text-[10px]"></i>
+                <span><%= activeServices %> Aktif / <%= suspendedServices %> Askıda</span>
+            </div>
+        </div>
+
+        <!-- Kart 2: Aktif Servisler -->
+        <div class="admin-card p-3.5 sm:p-5">
+            <div class="flex items-center justify-between text-xs text-zinc-400 font-medium">
+                <span>Aktif Çalışanlar</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            </div>
+            <div class="mt-2.5 sm:mt-3 flex items-baseline gap-1.5 sm:gap-2">
+                <span class="text-xl sm:text-3xl font-extrabold font-display text-emerald-400"><%= activeServices %></span>
+                <span class="text-[11px] sm:text-xs text-zinc-500">Servis</span>
+            </div>
+            <div class="text-[10px] sm:text-[11px] text-zinc-400 mt-2 font-mono truncate">
+                Platform genelinde açık
+            </div>
+        </div>
+
+        <!-- Kart 3: Tanımlı Lift Kapasitesi -->
+        <div class="admin-card p-3.5 sm:p-5">
+            <div class="flex items-center justify-between text-xs text-zinc-400 font-medium">
+                <span class="truncate">Tanımlı Lift</span>
+                <i class="fa-solid fa-car-side text-xs text-zinc-500"></i>
+            </div>
+            <div class="mt-2.5 sm:mt-3 flex items-baseline gap-1.5 sm:gap-2">
+                <span class="text-xl sm:text-3xl font-extrabold font-display text-white font-mono"><%= totalLifts %></span>
+                <span class="text-[11px] sm:text-xs text-zinc-500">Lift</span>
+            </div>
+            <div class="text-[10px] sm:text-[11px] text-sky-400 mt-2 font-mono truncate">
+                SüperAdmin tanımlı limit
+            </div>
+        </div>
+
+        <!-- Kart 4: Canlı İş Emirleri -->
+        <div class="admin-card p-3.5 sm:p-5">
+            <div class="flex items-center justify-between text-xs text-zinc-400 font-medium">
+                <span class="truncate">Servisteki Araçlar</span>
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            </div>
+            <div class="mt-2.5 sm:mt-3 flex items-baseline gap-1.5 sm:gap-2">
+                <span class="text-xl sm:text-3xl font-extrabold font-display text-white"><%= totalActiveOrders %></span>
+                <span class="text-[11px] sm:text-xs text-zinc-500">Araç</span>
+            </div>
+            <div class="text-[10px] sm:text-[11px] text-amber-400 mt-2 font-mono truncate">
+                Anlık devam eden işlem
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- TAB 1: KAYITLI SERVİSLER                                               -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="tab-content-workshops" class="space-y-4">
+        
+        <div class="admin-card overflow-hidden shadow-2xl">
+            <!-- Toolbar -->
+            <div class="p-3.5 sm:p-5 border-b border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-3.5 bg-white/[0.02]">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1">
+                    <!-- Arama -->
+                    <div class="relative w-full sm:w-72">
+                        <i class="fa-solid fa-magnifying-glass text-xs text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input type="text" id="service-search-input" oninput="filterServices()" placeholder="Servis, yetkili veya telefon ara..." class="w-full admin-input text-xs rounded-xl pl-9 pr-3 py-2 font-medium">
+                    </div>
+
+                    <!-- Filtreler -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto text-xs py-0.5 scrollbar-none">
+                        <button type="button" onclick="setStatusFilter('all')" id="filter-all" class="px-3 py-1.5 rounded-lg font-bold bg-white text-zinc-950 transition text-xs whitespace-nowrap">
+                            Tümü (<%= totalServices %>)
+                        </button>
+                        <button type="button" onclick="setStatusFilter('active')" id="filter-active" class="px-3 py-1.5 rounded-lg font-semibold text-zinc-400 hover:text-white hover:bg-white/10 transition text-xs whitespace-nowrap">
+                            Aktif (<%= activeServices %>)
+                        </button>
+                        <button type="button" onclick="setStatusFilter('suspended')" id="filter-suspended" class="px-3 py-1.5 rounded-lg font-semibold text-zinc-400 hover:text-white hover:bg-white/10 transition text-xs whitespace-nowrap">
+                            Askıda (<%= suspendedServices %>)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between sm:justify-end gap-2">
+                    <span class="text-xs text-zinc-500 font-mono" id="service-count-text"><%= totalServices %> servis listeleniyor</span>
+                </div>
+            </div>
+
+            <!-- Tablo (Mobilde Yatay Kaydırma Destekli) -->
+            <div class="overflow-x-auto">
+                <div class="md:hidden px-4 py-1.5 text-[10px] text-zinc-400 font-mono flex items-center justify-between border-b border-white/5 bg-white/[0.01]">
+                    <span><i class="fa-solid fa-arrows-left-right mr-1.5 text-sky-400"></i>Tabloyu yatay kaydırabilirsiniz</span>
+                    <span><%= totalServices %> Servis</span>
+                </div>
+                <table class="w-full text-left border-collapse text-xs min-w-[760px]">
+                    <thead>
+                        <tr class="border-b border-white/10 bg-white/[0.01] text-[11px] font-mono text-zinc-400 uppercase tracking-wider">
+                            <th class="py-3 px-4 sm:px-6">Servis Adı & Bilgi</th>
+                            <th class="py-3 px-4">Yetkili / Usta</th>
+                            <th class="py-3 px-4">Konum</th>
+                            <th class="py-3 px-4 text-center">Tanımlı Lift</th>
+                            <th class="py-3 px-4 text-center">İş Emri</th>
+                            <th class="py-3 px-4 text-right">Üretilen Ciro</th>
+                            <th class="py-3 px-4 text-center">Durum</th>
+                            <th class="py-3 px-4 sm:px-6 text-right">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5" id="services-table-body">
+                        <% if (services && services.length > 0) { %>
+                            <% services.forEach(service => { %>
+                                <tr class="service-row hover:bg-white/[0.02] transition" 
+                                    data-id="<%= service.id %>"
+                                    data-name="<%= (service.workshop_name || '').toLowerCase() %>"
+                                    data-owner="<%= (service.owner_name || '').toLowerCase() %>"
+                                    data-phone="<%= service.phone %>"
+                                    data-status="<%= service.is_active === 1 ? 'active' : 'suspended' %>"
+                                    data-capacity="<%= service.capacity || 3 %>"
+                                    data-city="<%= service.city || '-' %>"
+                                    data-district="<%= service.district || '-' %>"
+                                    data-address="<%= service.address || '-' %>"
+                                    data-email="<%= service.email || '-' %>"
+                                    data-revenue="₺<%= Number(service.total_revenue || 0).toLocaleString('tr-TR') %>"
+                                    data-active-orders="<%= service.active_orders_count || 0 %>"
+                                    data-delivered-orders="<%= service.delivered_orders_count || 0 %>"
+                                    data-total-orders="<%= service.total_orders_count || 0 %>"
+                                    data-created="<%= service.created_at_formatted || service.created_at || '-' %>"
+                                    data-tax="<%= (service.tax_office ? service.tax_office + ' / ' : '') + (service.tax_number || '-') %>"
+                                    data-service-type="<%= service.service_type === 'bosch' ? 'Bosch Car Service' : (service.service_type === 'brand' ? 'Marka Özel Servisi' : 'Özel Servis') %>">
+                                    
+                                    <!-- Servis Adı -->
+                                    <td class="py-3.5 px-4 sm:px-6">
+                                        <div class="font-bold text-white text-sm"><%= service.workshop_name %></div>
+                                        <div class="text-zinc-500 font-mono text-[10px] mt-0.5">SRV-<%= String(service.id).padStart(4, '0') %></div>
+                                    </td>
+
+                                    <!-- Yetkili -->
+                                    <td class="py-3.5 px-4">
+                                        <div class="font-medium text-zinc-200"><%= service.owner_name %></div>
+                                        <div class="text-zinc-400 font-mono text-[11px] mt-0.5"><%= service.phone %></div>
+                                    </td>
+
+                                    <!-- Konum -->
+                                    <td class="py-3.5 px-4">
+                                        <div class="text-zinc-300 font-medium"><%= service.city || '-' %></div>
+                                        <div class="text-zinc-500 text-[11px]"><%= service.district || '-' %></div>
+                                    </td>
+
+                                    <!-- Tanımlı Lift (SüperAdmin girişi) -->
+                                    <td class="py-3.5 px-4 text-center">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 text-sky-400 font-mono font-bold text-xs border border-sky-500/20">
+                                            <i class="fa-solid fa-car-side text-[10px]"></i>
+                                            <%= service.capacity || 3 %> Lift
+                                        </span>
+                                    </td>
+
+                                    <!-- Aktif İş Emri -->
+                                    <td class="py-3.5 px-4 text-center font-mono">
+                                        <span class="text-white font-bold"><%= service.active_orders_count || 0 %></span>
+                                        <span class="text-zinc-500 text-[10px]">/ <%= service.total_orders_count || 0 %></span>
+                                    </td>
+
+                                    <!-- Üretilen Ciro -->
+                                    <td class="py-3.5 px-4 text-right font-mono font-bold text-emerald-400">
+                                        ₺<%= Number(service.total_revenue || 0).toLocaleString('tr-TR') %>
+                                    </td>
+
+                                    <!-- Durum Toggle -->
+                                    <td class="py-3.5 px-4 text-center">
+                                        <button type="button" 
+                                            onclick="toggleStatus(<%= service.id %>)" 
+                                            id="status-btn-<%= service.id %>"
+                                            class="px-2.5 py-1 rounded-full text-[11px] font-bold transition <%= service.is_active === 1 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30' %>">
+                                            <%= service.is_active === 1 ? 'Aktif' : 'Askıda' %>
+                                        </button>
+                                    </td>
+
+                                    <!-- Aksiyonlar -->
+                                    <td class="py-3.5 px-4 sm:px-6 text-right">
+                                        <div class="inline-flex items-center gap-1.5">
+                                            <!-- Drawer Aç -->
+                                            <button type="button" onclick="openDrawer(<%= service.id %>)" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white transition" title="Detayları İncele">
+                                                <i class="fa-solid fa-sliders text-xs"></i>
+                                            </button>
+                                            <!-- Usta Masasına Geç (Impersonate) -->
+                                            <a href="/superadmin/impersonate/<%= service.id %>" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition flex items-center gap-1.5" title="Servis Usta Masasına Geçiş Yap">
+                                                <i class="fa-solid fa-arrow-right-to-bracket text-[10px] text-sky-400"></i>
+                                                <span class="hidden sm:inline">Usta Masası</span>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="8" class="py-12 text-center text-zinc-500">
+                                    Kayıtlı servis bulunamadı. "Yeni Servis Ekle" butonuyla ilk servisi açabilirsiniz.
+                                </td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- TAB 2: KAPASİTE & TELEMETRİ ANALİZİ                                    -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="tab-content-subscriptions" class="hidden space-y-5 sm:space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            
+            <!-- Kart 1: Ücretsiz Model & Platform Ciro Hacmi -->
+            <div class="admin-card p-4 sm:p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-white text-base">Platform Hacmi & Model</span>
+                        <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><%= activeServices %> Servis Aktif</span>
+                    </div>
+                    <p class="text-xs text-zinc-400 mb-4 leading-relaxed">
+                        Sistem şu anda tüm servisler için ücretsizdir. SüperAdmin her servise kendi kapasitesi kadar serbest lift tanımlar.
+                    </p>
+                    
+                    <div class="p-3.5 sm:p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-3 mb-6">
+                        <div>
+                            <span class="text-[11px] text-zinc-400 block mb-0.5">Sistem Üzerinden Üretilen Toplam Ciro</span>
+                            <span class="text-2xl sm:text-3xl font-extrabold text-emerald-400 font-mono">₺<%= Number(platformTotalRevenue || 0).toLocaleString('tr-TR') %></span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 pt-2 border-t border-white/5 text-xs font-mono">
+                            <div>
+                                <span class="text-zinc-500 block text-[10px]">Toplam İş Emri</span>
+                                <span class="text-white font-bold"><%= orderStats.total_orders %> Araç</span>
+                            </div>
+                            <div>
+                                <span class="text-zinc-500 block text-[10px]">Tamamlanan / Teslim</span>
+                                <span class="text-emerald-400 font-bold"><%= orderStats.delivered_orders %> Araç</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="text-xs text-zinc-300 space-y-2 mb-4">
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> SüperAdmin tarafından serbestçe belirlenen lift kapasitesi</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Tam Usta Masası & Canlı İstasyon Takibi</li>
+                        <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> Sınırsız İş Emri ve WhatsApp Canlı Takip Bağlantısı</li>
+                    </ul>
+                </div>
+                <div class="p-3 bg-white/[0.02] border border-white/5 rounded-xl text-[11px] text-zinc-400">
+                    Kayıt esnasında girilen lift sayısı servisin kullanım limitidir. Herhangi bir ücret kesintisi veya faturalandırma uygulanmaz.
+                </div>
+            </div>
+
+            <!-- Kart 2: Canlı Kapasite & Doluluk Oranları -->
+            <div class="admin-card p-4 sm:p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-white text-base">Canlı Kapasite Telemetrisi</span>
+                        <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20">Canlı Metrik</span>
+                    </div>
+                    <p class="text-xs text-zinc-400 mb-5 leading-relaxed">
+                        Sisteme kayıtlı servislerin lift doluluk oranları ve WhatsApp onay performans metrikleri.
+                    </p>
+
+                    <div class="space-y-4">
+                        <!-- Aktif Servis Oranı -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <span class="text-zinc-400">Aktif / Toplam Servis Oranı</span>
+                                <span class="font-mono text-white font-bold"><%= totalServices > 0 ? Math.round((activeServices/totalServices)*100) : 0 %>%</span>
+                            </div>
+                            <div class="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+                                <div class="bg-emerald-500 h-2 rounded-full" style="width: <%= totalServices > 0 ? (activeServices/totalServices)*100 : 0 %>%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Anlık Lift Doluluk Oranı -->
+                        <% const liftOccupancyPercent = totalLifts > 0 ? Math.min(100, Math.round((totalActiveOrders / totalLifts) * 100)) : 0; %>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <span class="text-zinc-400">Platform Lift Doluluk Oranı</span>
+                                <span class="font-mono text-white font-bold"><%= liftOccupancyPercent %>% (<%= totalActiveOrders %> / <%= totalLifts %> Lift)</span>
+                            </div>
+                            <div class="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+                                <div class="bg-sky-500 h-2 rounded-full" style="width: <%= liftOccupancyPercent %>%"></div>
+                            </div>
+                        </div>
+
+                        <!-- WhatsApp Onay Başarısı -->
+                        <% const approvalRate = approvalStats.total > 0 ? Math.round((approvalStats.approved / approvalStats.total) * 100) : 0; %>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <span class="text-zinc-400">WhatsApp Parça Onay Başarısı</span>
+                                <span class="font-mono text-emerald-400 font-bold"><%= approvalRate %>% (<%= approvalStats.approved %>/<%= approvalStats.total %> Onay)</span>
+                            </div>
+                            <div class="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+                                <div class="bg-emerald-500 h-2 rounded-full" style="width: <%= approvalRate %>%"></div>
+                            </div>
+                            <div class="text-[10px] text-zinc-500 mt-1 font-mono">
+                                Onaylanan ek parça hacmi: ₺<%= Number(approvalStats.total_value || 0).toLocaleString('tr-TR') %>
+                            </div>
+                        </div>
+
+                        <!-- Ortalama Kapasite -->
+                        <div class="p-3 bg-white/[0.02] rounded-xl border border-white/5 flex items-center justify-between text-xs">
+                            <span class="text-zinc-400">Ortalama Servis Başına Lift:</span>
+                            <span class="font-mono text-white font-bold"><%= totalServices > 0 ? (totalLifts/totalServices).toFixed(1) : 0 %> Lift</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-white/5 text-xs text-zinc-400">
+                    Tüm veriler SQLite WAL motorundan anlık olarak hesaplanmaktadır.
+                </div>
+            </div>
+
+            <!-- Kart 3: Şehir Dağılımı ve Lokasyon Dağılımı -->
+            <div class="admin-card p-4 sm:p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-white text-base">Bölgesel Servis Dağılımı</span>
+                        <span class="text-xs text-zinc-500 font-mono"><%= cityStats.length %> Bölge</span>
+                    </div>
+                    <p class="text-xs text-zinc-400 mb-5 leading-relaxed">
+                        Servislerin şehirlere göre oransal yoğunluğu ve kayıt dağılımı.
+                    </p>
+
+                    <div class="space-y-3.5 text-xs">
+                        <% if (cityStats && cityStats.length > 0) { %>
+                            <% cityStats.forEach(c => { 
+                                const cityPercent = totalServices > 0 ? Math.round((c.count / totalServices) * 100) : 0;
+                            %>
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-zinc-300 font-medium"><%= c.city %></span>
+                                        <span class="font-mono text-white font-bold"><%= c.count %> Servis (%<%= cityPercent %>)</span>
+                                    </div>
+                                    <div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                                        <div class="bg-gradient-to-r from-sky-500 to-blue-600 h-1.5 rounded-full" style="width: <%= cityPercent %>%"></div>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="text-zinc-500 text-xs italic py-4">Şehir verisi henüz girilmedi.</div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-white/[0.02] border border-white/5 rounded-xl text-[11px] text-zinc-400 mt-4">
+                    Yeni servis açıldıkça bölgesel harita ve telemetri otomatik olarak güncellenir.
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Servis Analiz & Lift Kapasite Dağılımı Tablosu -->
+        <div class="admin-card p-4 sm:p-6 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h3 class="font-bold text-sm text-white font-display">Servis Lift Kapasiteleri & Analiz Dağılımı</h3>
+                    <p class="text-xs text-zinc-400">SüperAdmin kontrolündeki aktif lift kapasitesi ve servis işleme yükü</p>
+                </div>
+                <a href="/superadmin/analytics-csv" class="w-full sm:w-auto justify-center px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs font-bold transition flex items-center gap-2 shrink-0">
+                    <i class="fa-solid fa-file-excel text-emerald-400"></i>
+                    <span>Platform Analiz Raporunu İndir (.csv)</span>
+                </a>
+            </div>
+
+            <div class="overflow-x-auto">
+                <div class="md:hidden px-4 py-1.5 text-[10px] text-zinc-400 font-mono flex items-center justify-between border-b border-white/5 bg-white/[0.01]">
+                    <span><i class="fa-solid fa-arrows-left-right mr-1.5 text-sky-400"></i>Tabloyu yatay kaydırabilirsiniz</span>
+                    <span>Analiz Listesi</span>
+                </div>
+                <table class="w-full text-left border-collapse text-xs min-w-[720px]">
+                    <thead>
+                        <tr class="border-b border-white/10 bg-white/[0.01] text-[11px] font-mono text-zinc-400 uppercase tracking-wider">
+                            <th class="py-3 px-4">Servis Adı</th>
+                            <th class="py-3 px-4 text-center">SüperAdmin Tanımlı Lift</th>
+                            <th class="py-3 px-4">Anlık Lift Doluluk Yükü</th>
+                            <th class="py-3 px-4 text-center">Teslim Edilen Araç</th>
+                            <th class="py-3 px-4 text-right">Toplam Ciro</th>
+                            <th class="py-3 px-4 text-center">Lisans Modeli</th>
+                            <th class="py-3 px-4 text-right">Kapasite Düzenle</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5 font-mono">
+                        <% if (services && services.length > 0) { %>
+                            <% services.forEach(s => { 
+                                const sCapacity = s.capacity || 3;
+                                const sActive = s.active_orders_count || 0;
+                                const sOccupancy = sCapacity > 0 ? Math.min(100, Math.round((sActive / sCapacity) * 100)) : 0;
+                                const barColor = sOccupancy >= 100 ? 'bg-rose-500' : (sOccupancy >= 70 ? 'bg-amber-500' : 'bg-emerald-500');
+                            %>
+                                <tr class="hover:bg-white/[0.02] transition">
+                                    <td class="py-3.5 px-4 font-sans font-bold text-white">
+                                        <div class="flex items-center gap-2">
+                                            <span><%= s.workshop_name %></span>
+                                            <span class="text-[10px] font-mono text-zinc-500">SRV-<%= String(s.id).padStart(4, '0') %></span>
+                                        </div>
+                                        <div class="text-[11px] font-normal text-zinc-400 mt-0.5"><%= s.owner_name %> &middot; <%= s.city || '-' %></div>
+                                    </td>
+                                    <td class="py-3.5 px-4 text-center">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-500/10 text-sky-400 font-bold border border-sky-500/20 text-xs">
+                                            <i class="fa-solid fa-car-side text-[10px]"></i>
+                                            <%= sCapacity %> Lift
+                                        </span>
+                                    </td>
+                                    <td class="py-3.5 px-4">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-24 bg-white/10 rounded-full h-1.5 overflow-hidden">
+                                                <div class="<%= barColor %> h-1.5 rounded-full" style="width: <%= sOccupancy %>%"></div>
+                                            </div>
+                                            <span class="text-[11px] font-bold <%= sOccupancy >= 100 ? 'text-rose-400' : (sOccupancy >= 70 ? 'text-amber-400' : 'text-emerald-400') %>">
+                                                <%= sActive %>/<%= sCapacity %> Dolu (%<%= sOccupancy %>)
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="py-3.5 px-4 text-center text-zinc-300">
+                                        <span class="text-white font-bold"><%= s.delivered_orders_count || 0 %></span> Araç
+                                    </td>
+                                    <td class="py-3.5 px-4 text-right font-bold text-emerald-400">
+                                        ₺<%= Number(s.total_revenue || 0).toLocaleString('tr-TR') %>
+                                    </td>
+                                    <td class="py-3.5 px-4 text-center font-sans">
+                                        <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20">
+                                            ÜCRETSİZ LİSANS
+                                        </span>
+                                    </td>
+                                    <td class="py-3.5 px-4 text-right font-sans">
+                                        <button type="button" onclick="openDrawer(<%= s.id %>)" class="text-sky-400 hover:text-sky-300 font-bold text-xs transition">
+                                            Kapasite Düzenle
+                                        </button>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="7" class="py-8 text-center text-zinc-500">Kayıtlı servis bulunamadı.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- TAB 5: OTO SERVİS PROFİL DİZİNİ (ARAMA & GÜVENLİ ERİŞİM KONTROLÜ)        -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="tab-content-profile" class="hidden space-y-6 sm:space-y-8 animate-[fadeIn_0.2s_ease_forwards]">
+        
+        <!-- 1. Güvenlik & Yetkili Erişim Politikası Bildirimi -->
+        <div class="rounded-2xl sm:rounded-3xl border border-amber-400/30 p-5 sm:p-6 shadow-xl backdrop-blur-xl relative overflow-hidden text-white" style="background: rgba(15, 23, 42, 0.48); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);">
+            <div class="flex flex-col sm:flex-row items-start gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center text-xl shrink-0 shadow-lg shadow-amber-500/10">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="space-y-2.5 flex-1 min-w-0">
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <h3 class="text-base sm:text-lg font-display font-extrabold text-white tracking-tight">Oto Servis Profili — Gizlilik &amp; Yetkili Erişim Politikası</h3>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-400/30 shadow-xs">
+                            <i class="fa-solid fa-lock text-[10px]"></i>
+                            <span>Doğrudan Erişim Kısıtlı</span>
+                        </span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                        Platform mimarisi ve servis veri gizliliği gereği; SüperAdmin, oto servislerin kurumsal profil bilgilerine, finansal kayıtlarına, personel listelerine ve çalışma takvimlerine servis sahibinin onayı olmadan doğrudan müdahale edemez.
+                    </p>
+                    
+                    <!-- Frosted Bilgilendirme Kutusu -->
+                    <div class="p-4 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-md space-y-1.5 font-sans">
+                        <div class="flex items-center gap-2 text-sky-400 font-bold text-xs">
+                            <i class="fa-solid fa-key text-[11px]"></i>
+                            <span>Bilgilendirme: 6 Haneli Doğrulama Kodu ile Güvenli Erişim Sistemi Hazırlanıyor</span>
+                        </div>
+                        <p class="text-slate-300 text-xs leading-relaxed">
+                            Bu ekrana servis yetkilisinin WhatsApp veya Usta Masası üzerinden anlık üreteceği <strong>6 Haneli Güvenlik İzin Kodu</strong> ile doğrulamalı geçici erişim sistemi entegre edilecektir. SüperAdmin yalnızca servis sahibinden onay alarak ilgili servisin profil detaylarını inceleyebilecek ve düzenleyebilecektir.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Gelişmiş Servis Arama & Rehber Filtre Çubuğu -->
+        <div class="rounded-2xl sm:rounded-3xl border border-white/20 p-4 sm:p-5 shadow-xl backdrop-blur-xl space-y-4" style="background: rgba(15, 23, 42, 0.45); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                <div>
+                    <h3 class="text-base sm:text-lg font-display font-black text-white tracking-tight flex items-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass text-sky-400 text-sm"></i>
+                        <span>Servis Arama &amp; Rehber Kataloğu</span>
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-300 mt-0.5">Sisteme kayıtlı servisleri filtreleyin, arayın ve erişim durumlarını inceleyin</p>
+                </div>
+                <div class="flex items-center gap-2 text-xs font-mono">
+                    <span id="profile-directory-count" class="px-3 py-1.5 rounded-xl bg-white/10 border border-white/15 text-slate-200 font-bold inline-flex items-center gap-2">
+                        <i class="fa-solid fa-building-user text-sky-400"></i>
+                        <span><%= totalServices %> Servis Listeleniyor</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Filtre Alanları Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <!-- Arama Kutusu -->
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass text-xs text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" id="profile-search-input" oninput="filterProfileDirectory()" placeholder="Servis adı, yetkili, telefon, kod..." class="w-full pl-9 pr-3.5 py-2.5 bg-black/50 border border-white/15 rounded-xl text-white text-xs sm:text-sm placeholder:text-slate-400 font-medium transition-all focus:border-sky-400 focus:outline-none focus:ring-1 focus:ring-sky-400/30">
+                </div>
+
+                <!-- Şehir Filtresi -->
+                <div class="relative">
+                    <select id="profile-city-filter" onchange="filterProfileDirectory()" class="w-full px-3.5 py-2.5 bg-black/50 border border-white/15 rounded-xl text-slate-200 text-xs sm:text-sm font-medium focus:border-sky-400 focus:outline-none appearance-none pr-8 cursor-pointer">
+                        <option value="all">Tüm Şehirler</option>
+                        <% 
+                            const uniqueCities = [...new Set(services.map(s => s.city).filter(Boolean))];
+                            uniqueCities.forEach(c => { 
+                        %>
+                            <option value="<%= c.toLowerCase() %>"><%= c %></option>
+                        <% }) %>
+                    </select>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                </div>
+
+                <!-- Servis Segmenti Filtresi -->
+                <div class="relative">
+                    <select id="profile-type-filter" onchange="filterProfileDirectory()" class="w-full px-3.5 py-2.5 bg-black/50 border border-white/15 rounded-xl text-slate-200 text-xs sm:text-sm font-medium focus:border-sky-400 focus:outline-none appearance-none pr-8 cursor-pointer">
+                        <option value="all">Tüm Segmentler</option>
+                        <option value="bosch">Bosch Car Service</option>
+                        <option value="private">Özel Mekanik &amp; Bakım</option>
+                        <option value="brand">Marka Özel Servisi</option>
+                        <option value="body">Kaporta &amp; Boya</option>
+                        <option value="electro">Oto Elektrik</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                </div>
+
+                <!-- Durum Filtresi Butonları (Pills) -->
+                <div class="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/15 backdrop-blur-md">
+                    <button type="button" onclick="setProfileStatusFilter('all')" id="prof-filter-all" class="flex-1 py-1.5 rounded-lg text-xs font-black bg-white text-slate-950 shadow-md transition-all cursor-pointer">Tümü</button>
+                    <button type="button" onclick="setProfileStatusFilter('active')" id="prof-filter-active" class="flex-1 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all cursor-pointer">Aktif</button>
+                    <button type="button" onclick="setProfileStatusFilter('suspended')" id="prof-filter-suspended" class="flex-1 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all cursor-pointer">Askıda</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Servis Kartları Dizini (Grid) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6" id="profile-directory-grid">
+            <% if (services && services.length > 0) { %>
+                <% services.forEach(srv => { %>
+                    <div class="profile-service-card rounded-3xl border border-white/15 hover:border-sky-400/50 flex flex-col justify-between shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group text-white backdrop-blur-xl"
+                         style="background: rgba(15, 23, 42, 0.48); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);"
+                         data-id="<%= srv.id %>"
+                         data-name="<%= (srv.workshop_name || '').toLowerCase() %>"
+                         data-owner="<%= (srv.owner_name || '').toLowerCase() %>"
+                         data-phone="<%= srv.phone %>"
+                         data-code="srv-<%= String(srv.id).padStart(4, '0') %>"
+                         data-city="<%= (srv.city || '').toLowerCase() %>"
+                         data-type="<%= srv.service_type || 'private' %>"
+                         data-status="<%= srv.is_active === 1 ? 'active' : 'suspended' %>">
+                         
+                        <!-- Kart Üstü -->
+                        <div class="p-5 pb-4 space-y-4">
+                            <!-- Logo ve Başlık -->
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-center gap-3.5 min-w-0">
+                                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white font-display font-extrabold text-base shadow-lg shadow-sky-500/20 shrink-0 border border-white/15 overflow-hidden group-hover:scale-105 transition-transform">
+                                        <% if (srv.logo_url) { %>
+                                            <img src="<%= srv.logo_url %>" class="w-full h-full object-cover">
+                                        <% } else { %>
+                                            <%= (srv.workshop_name || 'ÖS').substring(0, 2).toUpperCase() %>
+                                        <% } %>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h4 class="font-display font-black text-white text-base tracking-tight truncate group-hover:text-sky-300 transition-colors"><%= srv.workshop_name %></h4>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="text-[11px] font-mono text-sky-400 font-bold bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-400/20">SRV-<%= String(srv.id).padStart(4, '0') %></span>
+                                            <span class="text-slate-500">•</span>
+                                            <span class="text-xs text-slate-300 truncate"><%= srv.city || 'Belirtilmedi' %></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <% if (srv.is_active === 1) { %>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 shadow-xs shrink-0">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                        <span>Aktif</span>
+                                    </span>
+                                <% } else { %>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-500/20 text-rose-300 border border-rose-400/30 shadow-xs shrink-0">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                        <span>Askıda</span>
+                                    </span>
+                                <% } %>
+                            </div>
+
+                            <!-- Frosted Bilgi Paneli -->
+                            <div class="p-3.5 bg-black/40 rounded-2xl border border-white/10 space-y-2 font-mono text-xs backdrop-blur-md">
+                                <div class="flex justify-between items-center text-slate-400">
+                                    <span class="font-sans text-[11px]">Yetkili Usta:</span>
+                                    <span class="text-slate-100 font-sans font-bold"><%= srv.owner_name %></span>
+                                </div>
+                                <div class="flex justify-between items-center text-slate-400">
+                                    <span class="font-sans text-[11px]">Telefon:</span>
+                                    <span class="text-slate-200"><%= srv.phone %></span>
+                                </div>
+                                <div class="flex justify-between items-center text-slate-400">
+                                    <span class="font-sans text-[11px]">Segment:</span>
+                                    <span class="text-sky-400 font-sans font-semibold"><%= srv.service_type === 'bosch' ? 'Bosch Car Service' : (srv.service_type === 'brand' ? 'Marka Özel Servisi' : 'Özel Servis') %></span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                                    <div class="flex items-center gap-1.5 text-slate-300">
+                                        <i class="fa-solid fa-car-side text-sky-400 text-xs"></i>
+                                        <span class="font-bold text-white"><%= srv.capacity || 3 %> Lift</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 justify-end text-slate-300">
+                                        <i class="fa-solid fa-wrench text-emerald-400 text-xs"></i>
+                                        <span class="font-bold text-emerald-400"><%= srv.active_orders_count || 0 %> Araç</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kart Altı: Güvenlik Rozeti ve Talep Butonu -->
+                        <div class="p-4 pt-3 bg-white/[0.02] border-t border-white/10 space-y-2.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="inline-flex items-center gap-1.5 text-amber-300 font-bold text-[11px]">
+                                    <i class="fa-solid fa-lock text-[10px] text-amber-400"></i>
+                                    <span>Profil Korumalı</span>
+                                </span>
+                                <span class="text-[10px] font-mono text-slate-400">İzin Kodu Gerekir</span>
+                            </div>
+                            <button type="button" onclick="openAccessRequestModal(<%= srv.id %>, '<%= (srv.workshop_name || '').replace(/'/g, "\\'") %>', '<%= (srv.owner_name || '').replace(/'/g, "\\'") %>', '<%= srv.phone %>')" class="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 border border-white/15 cursor-pointer shadow-sm hover:border-amber-400/40">
+                                <i class="fa-solid fa-key text-[11px] text-amber-400"></i>
+                                <span>Profili İncele / Erişim Talep Et</span>
+                            </button>
+                        </div>
+
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="col-span-full text-center py-16 px-4 rounded-3xl border border-white/20 shadow-xl backdrop-blur-xl" style="background: rgba(15, 23, 42, 0.45);">
+                    <div class="w-16 h-16 rounded-3xl bg-white/10 border border-white/15 flex items-center justify-center mx-auto mb-4 text-slate-400 text-2xl">
+                        <i class="fa-solid fa-building-circle-exclamation"></i>
+                    </div>
+                    <h3 class="text-lg font-display font-bold text-white">Kayıtlı servis bulunamadı</h3>
+                    <p class="text-sm text-slate-300 max-w-sm mx-auto mt-1">
+                        Sistemde henüz kayıtlı servis bulunmuyor veya arama kriterlerinize uyan sonuç yok.
+                    </p>
+                </div>
+            <% } %>
+        </div>
+
+    </div>
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="tab-content-system" class="hidden space-y-5 sm:space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            
+            <!-- WhatsApp Durumu -->
+            <div class="admin-card p-4 sm:p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-white text-base">WhatsApp Gateway</span>
+                            <p class="text-xs text-zinc-400">Baileys Web Socket Hattı</p>
+                        </div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-xs font-mono font-bold <%= isWhatsappConnected ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30' %>">
+                        <%= isWhatsappConnected ? 'Aktif (Bağlı)' : 'Bekliyor' %>
+                    </span>
+                </div>
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    Baileys Web Socket katmanı üzerinden araç kabul takip linkleri, dijital PDF fişler ve usta parça onay talepleri anlık iletilir.
+                </p>
+                <div class="space-y-2 text-xs font-mono">
+                    <div class="flex justify-between py-1.5 border-b border-white/5">
+                        <span class="text-zinc-400">İletilen Toplam Mesaj:</span>
+                        <span class="text-white font-bold"><%= totalMessages %> Mesaj</span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-white/5">
+                        <span class="text-zinc-400">Oturum Klasörü:</span>
+                        <span class="text-zinc-300">auth_info_baileys/</span>
+                    </div>
+                    <div class="flex justify-between py-1.5">
+                        <span class="text-zinc-400">Bağlantı Türü:</span>
+                        <span class="text-emerald-400 font-bold">Multi-Device Socket</span>
+                    </div>
+                </div>
+
+                <!-- Canlı Test Butonu -->
+                <button type="button" onclick="testWhatsappConnection()" id="btn-test-whatsapp" class="w-full py-2.5 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-bold transition flex items-center justify-center gap-2 active:scale-98">
+                    <i class="fa-solid fa-plug-circle-check text-xs"></i>
+                    <span>WhatsApp Bağlantısını Test Et</span>
+                </button>
+            </div>
+
+            <!-- Medya & Sharp WebP Motoru -->
+            <div class="admin-card p-4 sm:p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-photo-film"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-white text-base">Medya & WebP Motoru</span>
+                            <p class="text-xs text-zinc-400">Sharp C++ Optimizasyonu</p>
+                        </div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30">
+                        Sharp Active
+                    </span>
+                </div>
+                <p class="text-xs text-zinc-400 leading-relaxed">
+                    Ustaların telefonlarından yüklediği yüksek çözünürlüklü hasar/parça fotoğrafları anında WebP formatına sıkıştırılır.
+                </p>
+                <div class="space-y-2 text-xs font-mono">
+                    <div class="flex justify-between py-1.5 border-b border-white/5">
+                        <span class="text-zinc-400">Yüklenen Toplam Görsel:</span>
+                        <span class="text-white font-bold"><%= mediaStats.fileCount %> Dosya</span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-white/5">
+                        <span class="text-zinc-400">Gerçek Disk Kullanımı:</span>
+                        <span class="text-white font-bold"><%= mediaStats.formattedSize %></span>
+                    </div>
+                    <div class="flex justify-between py-1.5">
+                        <span class="text-zinc-400">Tahmini Disk Tasarrufu:</span>
+                        <span class="text-emerald-400 font-bold">~<%= mediaStats.savedFormatted %> (-%71)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SQLite Veritabanı ve Sunucu Sağlığı -->
+            <div class="admin-card p-4 sm:p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-server"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-white text-base">Veritabanı & Sunucu</span>
+                            <p class="text-xs text-zinc-400">ototakip.db (Native SQLiteSync)</p>
+                        </div>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        WAL Mode
+                    </span>
+                </div>
+                <div class="space-y-2 text-xs font-mono">
+                    <div class="flex justify-between py-1.5 border-b border-white/5">
+                        <span class="text-zinc-400">Veritabanı Boyutu:</span>
+                        <span class="text-white font-bold"><%= dbStats.sizeFormatted %></span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-white/5">
+                        <span class="text-zinc-400">Tablo Sayısı:</span>
+                        <span class="text-white font-bold"><%= dbStats.tablesCount %> Tablo</span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-white/5">
+                        <span class="text-zinc-400">Sunucu Uptime:</span>
+                        <span class="text-white font-bold"><%= systemHealth.uptime %></span>
+                    </div>
+                    <div class="flex justify-between py-1.5 border-b border-white/5">
+                        <span class="text-zinc-400">RAM Tüketimi (RSS):</span>
+                        <span class="text-white font-bold"><%= systemHealth.memory %></span>
+                    </div>
+                    <div class="flex justify-between py-1.5">
+                        <span class="text-zinc-400">Node.js Runtime:</span>
+                        <span class="text-emerald-400 font-bold"><%= systemHealth.nodeVersion %></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- TAB 4: DENETİM GÜNLÜĞÜ (AUDIT TRAIL)                                   -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="tab-content-logs" class="hidden space-y-4">
+        <div class="admin-card p-4 sm:p-6 space-y-4 shadow-xl">
+            <!-- Başlık ve Özet -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                <div>
+                    <h3 class="font-bold text-base text-white font-display">Güvenlik ve Yönetici Hareketleri (Audit Trail)</h3>
+                    <p class="text-xs text-zinc-400 mt-0.5">SüperAdmin tarafından veritabanında gerçekleştirilen işlemler SQLite <code class="text-sky-400 font-mono">audit_logs</code> tablosuna anlık kaydedilir</p>
+                </div>
+                <div class="flex items-center justify-between sm:justify-end gap-2">
+                    <span id="audit-count-text" class="text-xs font-mono text-zinc-400 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
+                        <%= auditLogs.length %> kayıt listeleniyor
+                    </span>
+                    <button type="button" onclick="location.reload()" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 transition text-xs" title="Günlüğü Yenile">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Canlı Arama ve Kategori Filtreleri -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 bg-white/[0.01] p-2 rounded-xl border border-white/5">
+                <!-- Arama Kutusu -->
+                <div class="relative flex-1 sm:max-w-sm">
+                    <i class="fa-solid fa-magnifying-glass text-xs text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" id="audit-search-input" oninput="filterAuditLogs()" placeholder="İşlem detayı, kullanıcı, IP ara..." class="w-full admin-input rounded-xl pl-9 pr-3 py-2 text-xs font-medium">
+                </div>
+
+                <!-- Kategori Butonları -->
+                <div class="flex items-center gap-1 overflow-x-auto text-xs pb-1 sm:pb-0 scrollbar-none">
+                    <button type="button" onclick="setAuditCategoryFilter('all')" id="audit-filter-all" class="px-3 py-1.5 rounded-lg font-bold bg-white text-zinc-950 transition text-xs whitespace-nowrap">
+                        Tümü (<%= auditLogs.length %>)
+                    </button>
+                    <button type="button" onclick="setAuditCategoryFilter('auth')" id="audit-filter-auth" class="px-3 py-1.5 rounded-lg font-semibold text-zinc-400 hover:text-white hover:bg-white/10 transition text-xs whitespace-nowrap">
+                        Giriş &amp; Güvenlik
+                    </button>
+                    <button type="button" onclick="setAuditCategoryFilter('service')" id="audit-filter-service" class="px-3 py-1.5 rounded-lg font-semibold text-zinc-400 hover:text-white hover:bg-white/10 transition text-xs whitespace-nowrap">
+                        Servis İşlemleri
+                    </button>
+                    <button type="button" onclick="setAuditCategoryFilter('system')" id="audit-filter-system" class="px-3 py-1.5 rounded-lg font-semibold text-zinc-400 hover:text-white hover:bg-white/10 transition text-xs whitespace-nowrap">
+                        Sistem &amp; Yedek
+                    </button>
+                </div>
+            </div>
+
+            <!-- Canlı Log Listesi -->
+            <div class="space-y-2.5 text-xs font-mono" id="audit-logs-list">
+                <% if (auditLogs && auditLogs.length > 0) { %>
+                    <% auditLogs.forEach(log => { 
+                        const badgeColor = log.category === 'auth' 
+                            ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' 
+                            : (log.category === 'service' 
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                                : 'bg-purple-500/10 text-purple-400 border-purple-500/20');
+                    %>
+                        <div class="audit-log-item p-3 sm:p-3.5 bg-white/[0.02] rounded-xl border border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 hover:bg-white/[0.04] transition"
+                             data-category="<%= log.category %>"
+                             data-details="<%= (log.details || '').toLowerCase() %>"
+                             data-action="<%= (log.action || '').toLowerCase() %>"
+                             data-admin="<%= (log.admin_username || '').toLowerCase() %>"
+                             data-ip="<%= log.ip_address || '' %>"
+                             data-date="<%= (log.created_at || '').toLowerCase() %>">
+                            <div class="flex items-start sm:items-center gap-2.5 min-w-0">
+                                <span class="px-2.5 py-1 rounded-md font-bold text-[10px] border shrink-0 flex items-center gap-1.5 <%= badgeColor %>">
+                                    <i class="fa-solid <%= log.icon || 'fa-clock' %> text-[9px]"></i>
+                                    <%= log.action_label || log.action %>
+                                </span>
+                                <span class="text-zinc-200 font-sans text-xs break-words sm:truncate max-w-xl"><%= log.details %></span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] text-zinc-500 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5 self-start sm:self-center">
+                                <span class="text-zinc-400 flex items-center gap-1 font-sans">
+                                    <i class="fa-solid fa-user-shield text-[10px] text-sky-400"></i>
+                                    <%= log.admin_username || 'SüperAdmin' %>
+                                </span>
+                                <span>&middot;</span>
+                                <span>IP: <%= log.ip_address || '127.0.0.1' %></span>
+                                <span>&middot;</span>
+                                <span class="text-zinc-300 font-mono flex items-center gap-1.5" title="Türkiye Saati (GMT+3)">
+                                    <i class="fa-regular fa-clock text-[10px] text-zinc-500"></i>
+                                    <span><%= log.created_at %></span>
+                                    <% if (log.created_at_relative) { %>
+                                        <span class="text-[10px] text-sky-400/90 font-sans font-medium">(<%= log.created_at_relative %>)</span>
+                                    <% } %>
+                                </span>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="py-12 text-center text-zinc-500 italic">
+                        Henüz kayıtlı bir denetim günlüğü bulunmuyor.
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- KODLU İZİN SİSTEMİ / SERVİS PROFİLİ ERİŞİM TALEP MODALI                -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="access-modal-backdrop" onclick="closeAccessRequestModal()" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden transition-opacity"></div>
+<div id="access-modal" class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-md max-h-[92vh] overflow-y-auto bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl z-50 hidden p-5 sm:p-7 space-y-4 sm:space-y-5 text-white animate-[fadeIn_0.2s_ease_forwards]">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center text-lg shrink-0 shadow-lg shadow-amber-500/10">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <h3 class="font-display font-extrabold text-base text-white">Servis Profili Yetkilendirmesi</h3>
+                <p class="text-xs text-slate-400 mt-0.5" id="access-modal-sub">Güvenlik Onay Kodu Girişi</p>
+            </div>
+        </div>
+        <button type="button" onclick="closeAccessRequestModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+            <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+    </div>
+
+    <div class="space-y-4 text-xs">
+        <!-- Servis Bilgisi Kartı -->
+        <div class="p-3.5 sm:p-4 bg-slate-950/60 rounded-2xl border border-slate-800 space-y-2 font-mono">
+            <div class="flex justify-between items-center"><span class="text-slate-400 font-sans">Servis Adı:</span><span class="text-white font-bold font-sans text-sm" id="access-modal-name">-</span></div>
+            <div class="flex justify-between items-center"><span class="text-slate-400 font-sans">Yetkili Usta:</span><span class="text-slate-200 font-sans font-semibold" id="access-modal-owner">-</span></div>
+            <div class="flex justify-between items-center"><span class="text-slate-400 font-sans">Telefon:</span><span class="text-slate-300" id="access-modal-phone">-</span></div>
+        </div>
+
+        <!-- Güvenlik Bilgilendirmesi -->
+        <div class="p-3.5 bg-amber-500/10 border border-amber-400/20 rounded-2xl space-y-1 font-sans">
+            <div class="flex items-center gap-1.5 text-amber-300 font-bold text-xs">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Doğrudan Erişim Kısıtlaması</span>
+            </div>
+            <p class="text-slate-300 text-xs leading-relaxed">
+                SüperAdmin doğrudan servis profil verilerini görüntüleyemez veya düzenleyemez. Servis yetkilisinden temin edilen 6 haneli erişim anahtarı zorunludur.
+            </p>
+        </div>
+
+        <!-- Kod Girişi (Mockup / Hazırlık) -->
+        <div class="space-y-1.5 font-sans">
+            <label class="block text-slate-300 font-bold text-xs">6 Haneli Servis İzin Kodu</label>
+            <div class="relative">
+                <input type="text" id="access-code-input" maxlength="6" placeholder="Örn: 849201" disabled class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 font-mono text-center tracking-widest text-lg font-black text-amber-300 opacity-60 cursor-not-allowed">
+            </div>
+            <span class="text-[11px] text-sky-400 font-mono block mt-1">
+                <i class="fa-solid fa-clock mr-1"></i>Kodlu izin sistemi altyapısı bir sonraki aşamada aktif edilecektir.
+            </span>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800 flex items-center justify-end gap-2.5">
+            <button type="button" onclick="closeAccessRequestModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer">Kapat</button>
+            <button type="button" disabled class="px-5 py-2.5 rounded-xl bg-white/10 text-slate-500 font-bold text-xs cursor-not-allowed border border-white/5">Doğrula &amp; Profili Aç</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- YENİ SERVİS EKLEME MODALI                                             -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="new-service-modal-backdrop" onclick="closeNewServiceModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden transition-opacity"></div>
+<div id="new-service-modal" class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-lg max-h-[92vh] overflow-y-auto bg-[#0d1117] border border-white/10 rounded-2xl shadow-2xl z-50 hidden p-5 sm:p-6 space-y-4 sm:space-y-5">
+    <div class="flex items-center justify-between border-b border-white/10 pb-4">
+        <div>
+            <h3 class="font-bold text-base text-white font-display">Yeni Servis Kaydı</h3>
+            <p class="text-xs text-zinc-400 mt-0.5">SüperAdmin tarafından servise özel lift kapasitesiyle kayıt</p>
+        </div>
+        <button type="button" onclick="closeNewServiceModal()" class="text-zinc-500 hover:text-white p-1">
+            <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+    </div>
+
+    <form onsubmit="handleCreateService(event)" class="space-y-3.5 sm:space-y-4 text-xs">
+        <div>
+            <label class="block text-zinc-400 font-bold mb-1">Servis Ticari Adı *</label>
+            <input type="text" name="workshop_name" required placeholder="örn: Özkan Otomotiv Bosch Car Service" class="w-full admin-input rounded-xl px-3.5 py-2.5 text-xs">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div>
+                <label class="block text-zinc-400 font-bold mb-1">Yetkili / Usta Adı *</label>
+                <input type="text" name="owner_name" required placeholder="örn: Mehmet Özkan" class="w-full admin-input rounded-xl px-3.5 py-2.5 text-xs">
+            </div>
+            <div>
+                <label class="block text-zinc-400 font-bold mb-1">Telefon (Giriş No) *</label>
+                <input type="tel" name="phone" required placeholder="0532 111 22 33" class="w-full admin-input rounded-xl px-3.5 py-2.5 font-mono text-xs">
+            </div>
+        </div>
+
+        <!-- SüperAdmin Lift Kapasitesi Girişi -->
+        <div class="p-3.5 bg-sky-500/10 border border-sky-500/20 rounded-xl space-y-2">
+            <div class="flex items-center justify-between">
+                <label class="block text-sky-400 font-bold">Tanımlanacak Lift Kapasitesi *</label>
+                <span class="text-[10px] font-mono text-sky-400/80">SüperAdmin Kontrolü</span>
+            </div>
+            <input type="number" name="capacity" min="1" max="50" value="3" required class="w-full admin-input rounded-xl px-3.5 py-2 font-mono text-sm font-bold text-center">
+            <p class="text-[10px] text-zinc-400">Servisin kendi fiziki kapasitesi kadar lift tanımlayın. Profilinde bu rakam gösterilmez.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div>
+                <label class="block text-zinc-400 font-bold mb-1">İl</label>
+                <input type="text" name="city" value="İstanbul" class="w-full admin-input rounded-xl px-3.5 py-2.5 text-xs">
+            </div>
+            <div>
+                <label class="block text-zinc-400 font-bold mb-1">İlçe</label>
+                <input type="text" name="district" value="Kartal" class="w-full admin-input rounded-xl px-3.5 py-2.5 text-xs">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-zinc-400 font-bold mb-1">Geçici Şifre</label>
+            <input type="text" name="password" value="123456" class="w-full admin-input rounded-xl px-3.5 py-2.5 font-mono text-xs">
+            <span class="text-[10px] text-zinc-500 mt-1 block">Servis yetkilisi ilk girişte şifresini değiştirebilir.</span>
+        </div>
+
+        <div class="pt-3 border-t border-white/10 flex items-center justify-end gap-3">
+            <button type="button" onclick="closeNewServiceModal()" class="px-4 py-2 rounded-xl text-zinc-400 hover:text-white font-bold transition">Vazgeç</button>
+            <button type="submit" class="px-5 py-2 rounded-xl bg-white text-zinc-950 font-bold hover:bg-zinc-100 transition shadow-lg">Servisi Kaydet</button>
+        </div>
+    </form>
+</div>
+
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<!-- SAĞDAN AÇILAN HIZLI DETAY ÇEKMECESİ (DRAWER)                          -->
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="service-drawer-backdrop" onclick="closeDrawer()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden transition-opacity"></div>
+<div id="service-drawer" class="fixed right-0 top-0 bottom-0 w-full sm:max-w-md bg-[#0d1117] border-l border-white/10 shadow-drawer z-50 transform translate-x-full transition-transform duration-300 flex flex-col justify-between hidden">
+    <div class="overflow-y-auto">
+        <!-- Başlık -->
+        <div class="p-5 border-b border-white/10 flex items-center justify-between sticky top-0 bg-[#0d1117] z-10">
+            <div>
+                <div class="flex items-center gap-2">
+                    <h3 class="font-bold text-sm text-white font-display" id="drawer-name">Servis Detayı</h3>
+                    <span id="drawer-type" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20">Özel Servis</span>
+                </div>
+                <p class="text-xs text-zinc-500 mt-0.5" id="drawer-owner">Yetkili bilgisi</p>
+            </div>
+            <button type="button" onclick="closeDrawer()" class="text-zinc-500 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+        <!-- Zengin Gerçek İçerik -->
+        <div class="p-5 space-y-5 text-xs">
+            
+            <!-- Canlı İstatistik Kartı -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="p-3.5 bg-white/[0.02] rounded-xl border border-white/5 space-y-1">
+                    <span class="text-zinc-500 text-[10px] uppercase font-mono block">Üretilen Ciro</span>
+                    <span class="font-mono text-emerald-400 font-extrabold text-base" id="drawer-revenue">₺0</span>
+                </div>
+                <div class="p-3.5 bg-white/[0.02] rounded-xl border border-white/5 space-y-1">
+                    <span class="text-zinc-500 text-[10px] uppercase font-mono block">Aktif İş Emri</span>
+                    <span class="font-mono text-white font-extrabold text-base" id="drawer-orders">0 / 0</span>
+                </div>
+            </div>
+
+            <!-- Temel Bilgiler -->
+            <div class="p-4 bg-white/[0.02] rounded-xl border border-white/5 space-y-2.5">
+                <div class="flex justify-between items-center"><span class="text-zinc-400">Telefon:</span><span class="font-mono text-white font-bold" id="drawer-phone">-</span></div>
+                <div class="flex justify-between items-center"><span class="text-zinc-400">E-Posta:</span><span class="text-zinc-300" id="drawer-email">-</span></div>
+                <div class="flex justify-between items-center"><span class="text-zinc-400">Konum:</span><span class="text-white" id="drawer-location">-</span></div>
+                <div class="flex justify-between items-center"><span class="text-zinc-400">Açık Adres:</span><span class="text-zinc-300 text-right truncate max-w-[200px]" id="drawer-address">-</span></div>
+                <div class="flex justify-between items-center"><span class="text-zinc-400">Vergi Dairesi / VKN:</span><span class="font-mono text-zinc-300" id="drawer-tax">-</span></div>
+                <div class="flex justify-between items-center"><span class="text-zinc-400">Kayıt Tarihi:</span><span class="font-mono text-zinc-400" id="drawer-created">-</span></div>
+                <div class="flex justify-between items-center pt-2 border-t border-white/5"><span class="text-zinc-400">Durum:</span><span class="font-bold" id="drawer-status">-</span></div>
+            </div>
+
+            <!-- Lift Kapasitesi Güncelleme -->
+            <div class="p-4 bg-sky-500/10 border border-sky-500/20 rounded-xl space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <label class="block font-bold text-sky-400">Lift Kapasitesini Güncelle</label>
+                    <span class="text-[10px] text-zinc-400 font-mono">SüperAdmin Yetkisi</span>
+                </div>
+                <div class="flex gap-2">
+                    <input type="number" min="1" max="50" id="drawer-capacity-input" class="w-24 admin-input rounded-xl px-3 py-2 text-center font-bold font-mono text-sm">
+                    <button type="button" onclick="saveDrawerCapacity()" class="flex-1 px-4 py-2 rounded-xl bg-white text-zinc-950 font-bold hover:bg-zinc-100 transition shadow-sm">Kapasiteyi Güncelle</button>
+                </div>
+            </div>
+
+            <!-- Impersonate Butonu -->
+            <div class="pt-2">
+                <a href="#" id="drawer-impersonate-btn" class="w-full py-3 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-center block shadow-lg transition">
+                    <i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>
+                    Bu Servisin Usta Masasına Geç
+                </a>
+                <p class="text-[10px] text-zinc-500 text-center mt-2">
+                    Usta masasına geçiş yapıldığında üst barda konsola dönüş butonu yer alır.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ━━━━ SÜPERADMIN İNTERAKTİF JAVASCRIPT MOTORU ━━━━ -->
+<script>
+    let activeDrawerServiceId = null;
+    let currentProfileServiceId = null;
+    const allServicesData = <%- JSON.stringify(services || []) %>;
+
+    // 1. Sekmeler Arası Geçiş (Masaüstü, Mobil Çekmece & Mobil Hızlı Pill Çubuğu Senkronizasyonu)
+    function switchSuperadminTab(tabId) {
+        const tabs = ['workshops', 'subscriptions', 'profile', 'system', 'logs'];
+        const titles = {
+            'workshops': 'Kayıtlı Servisler',
+            'subscriptions': 'Kapasite & Telemetri',
+            'profile': 'Oto Servis Profili',
+            'system': 'WhatsApp & Sistem',
+            'logs': 'Denetim Günlüğü'
+        };
+
+        tabs.forEach(t => {
+            const el = document.getElementById('tab-content-' + t);
+            if (el) el.classList.add('hidden');
+            
+            // Masaüstü Sidebar
+            const btn = document.getElementById('admin-nav-' + t);
+            if (btn) btn.classList.remove('active');
+
+            // Mobil Çekmece Sidebar
+            const mobBtn = document.getElementById('admin-mob-nav-' + t);
+            if (mobBtn) mobBtn.classList.remove('active');
+
+            // Mobil Yatay Pill Butonları
+            const pillBtn = document.getElementById('admin-mob-pill-' + t);
+            if (pillBtn) {
+                pillBtn.classList.remove('active', 'bg-white/10', 'text-white', 'border-white/15', 'font-bold');
+                pillBtn.classList.add('text-zinc-400', 'font-semibold');
+            }
+        });
+
+        // Hedef Sekmeyi Aç
+        const targetEl = document.getElementById('tab-content-' + tabId);
+        if (targetEl) targetEl.classList.remove('hidden');
+
+        // Masaüstü Butonunu Aktifleştir
+        const targetBtn = document.getElementById('admin-nav-' + tabId);
+        if (targetBtn) targetBtn.classList.add('active');
+
+        // Mobil Çekmece Butonunu Aktifleştir
+        const targetMobBtn = document.getElementById('admin-mob-nav-' + tabId);
+        if (targetMobBtn) targetMobBtn.classList.add('active');
+
+        // Mobil Pill Butonunu Aktifleştir
+        const targetPillBtn = document.getElementById('admin-mob-pill-' + tabId);
+        if (targetPillBtn) {
+            targetPillBtn.classList.remove('text-zinc-400', 'font-semibold');
+            targetPillBtn.classList.add('active', 'bg-white/10', 'text-white', 'border-white/15', 'font-bold');
+            try {
+                targetPillBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            } catch(e) {}
+        }
+
+        const titleEl = document.getElementById('current-superadmin-view-title');
+        if (titleEl) titleEl.innerText = titles[tabId] || 'Panel';
+
+        // Mobilde çekmece açıksa otomatik kapat
+        if (typeof toggleMobileSidebar === 'function') {
+            toggleMobileSidebar(false);
+        }
+
+        // Metrik kartlarını sadece ana listede göster
+        const metrics = document.getElementById('platform-metrics-section');
+        if (metrics) {
+            if (tabId === 'workshops') metrics.classList.remove('hidden');
+            else metrics.classList.add('hidden');
+        }
+
+        // Profil veya Log sekmesine geçildiğinde filtreleri tazele
+        if (tabId === 'profile') {
+            filterProfileDirectory();
+        } else if (tabId === 'logs') {
+            filterAuditLogs();
+        }
+    }
+
+    // 2. Canlı Servis Filtreleme ve Arama
+    let currentStatusFilter = 'all';
+
+    function setStatusFilter(status) {
+        currentStatusFilter = status;
+        document.querySelectorAll('#filter-all, #filter-active, #filter-suspended').forEach(btn => {
+            btn.classList.remove('bg-white', 'text-zinc-950');
+            btn.classList.add('text-zinc-400');
+        });
+        const activeBtn = document.getElementById('filter-' + status);
+        if (activeBtn) {
+            activeBtn.classList.add('bg-white', 'text-zinc-950');
+            activeBtn.classList.remove('text-zinc-400');
+        }
+        filterServices();
+    }
+
+    function filterServices() {
+        const query = (document.getElementById('service-search-input').value || '').toLowerCase().trim();
+        const rows = document.querySelectorAll('.service-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const name = row.getAttribute('data-name') || '';
+            const owner = row.getAttribute('data-owner') || '';
+            const phone = row.getAttribute('data-phone') || '';
+            const status = row.getAttribute('data-status') || '';
+
+            const matchesQuery = !query || name.includes(query) || owner.includes(query) || phone.includes(query);
+            const matchesStatus = currentStatusFilter === 'all' || status === currentStatusFilter;
+
+            if (matchesQuery && matchesStatus) {
+                row.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                row.classList.add('hidden');
+            }
+        });
+
+        const countText = document.getElementById('service-count-text');
+        if (countText) countText.innerText = `${visibleCount} servis listeleniyor`;
+    }
+
+    // 3. Durum Değiştir (Aktif / Askıda)
+    async function toggleStatus(serviceId) {
+        try {
+            const res = await fetch(`/superadmin/services/${serviceId}/toggle-status`, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' }
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (window.toast) window.toast(data.message, 'success');
+                setTimeout(() => window.location.reload(), 600);
+            } else {
+                if (window.toast) window.toast(data.message || 'Hata oluştu.', 'error');
+            }
+        } catch (e) {
+            if (window.toast) window.toast('İşlem başarısız.', 'error');
+        }
+    }
+
+    // 4. Yeni Servis Ekleme Modal İşlemleri
+    function openNewServiceModal() {
+        document.getElementById('new-service-modal-backdrop').classList.remove('hidden');
+        document.getElementById('new-service-modal').classList.remove('hidden');
+    }
+
+    function closeNewServiceModal() {
+        document.getElementById('new-service-modal-backdrop').classList.add('hidden');
+        document.getElementById('new-service-modal').classList.add('hidden');
+    }
+
+    async function handleCreateService(e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const body = {};
+        formData.forEach((val, key) => body[key] = val);
+
+        try {
+            const res = await fetch('/superadmin/services', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (window.toast) window.toast('Servis başarıyla eklendi!', 'success');
+                closeNewServiceModal();
+                setTimeout(() => window.location.reload(), 600);
+            } else {
+                if (window.toast) window.toast(data.message || 'Kayıt başarısız.', 'error');
+            }
+        } catch (err) {
+            if (window.toast) window.toast('Sunucu hatası.', 'error');
+        }
+    }
+
+    // 5. Zenginleştirilmiş Drawer Detay
+    function openDrawer(serviceId) {
+        activeDrawerServiceId = serviceId;
+        const row = document.querySelector(`.service-row[data-id="${serviceId}"]`);
+        if (!row) return;
+
+        const name = row.querySelector('.font-bold.text-white').innerText;
+        const owner = row.getAttribute('data-owner');
+        const phone = row.getAttribute('data-phone');
+        const city = row.getAttribute('data-city');
+        const district = row.getAttribute('data-district');
+        const capacity = row.getAttribute('data-capacity');
+        const status = row.getAttribute('data-status');
+        const email = row.getAttribute('data-email');
+        const address = row.getAttribute('data-address');
+        const tax = row.getAttribute('data-tax');
+        const created = row.getAttribute('data-created');
+        const revenue = row.getAttribute('data-revenue');
+        const activeOrders = row.getAttribute('data-active-orders');
+        const totalOrders = row.getAttribute('data-total-orders');
+        const serviceType = row.getAttribute('data-service-type');
+
+        document.getElementById('drawer-name').innerText = name;
+        document.getElementById('drawer-owner').innerText = `Yetkili: ${owner.toUpperCase()}`;
+        document.getElementById('drawer-phone').innerText = phone;
+        document.getElementById('drawer-email').innerText = email;
+        document.getElementById('drawer-location').innerText = `${city} / ${district}`;
+        document.getElementById('drawer-address').innerText = address;
+        document.getElementById('drawer-tax').innerText = tax;
+        document.getElementById('drawer-created').innerText = created;
+        document.getElementById('drawer-revenue').innerText = revenue;
+        document.getElementById('drawer-orders').innerText = `${activeOrders} Aktif / ${totalOrders} Toplam`;
+        document.getElementById('drawer-type').innerText = serviceType;
+        document.getElementById('drawer-capacity-input').value = capacity;
+        document.getElementById('drawer-status').innerText = status === 'active' ? 'Aktif' : 'Askıda';
+        document.getElementById('drawer-status').className = status === 'active' ? 'font-bold text-emerald-400' : 'font-bold text-red-400';
+        document.getElementById('drawer-impersonate-btn').href = `/superadmin/impersonate/${serviceId}`;
+
+        const backdrop = document.getElementById('service-drawer-backdrop');
+        const drawer = document.getElementById('service-drawer');
+        backdrop.classList.remove('hidden');
+        drawer.classList.remove('hidden');
+        setTimeout(() => drawer.classList.remove('translate-x-full'), 10);
+    }
+
+    function closeDrawer() {
+        const drawer = document.getElementById('service-drawer');
+        const backdrop = document.getElementById('service-drawer-backdrop');
+        drawer.classList.add('translate-x-full');
+        setTimeout(() => {
+            drawer.classList.add('hidden');
+            backdrop.classList.add('hidden');
+            activeDrawerServiceId = null;
+        }, 300);
+    }
+
+    async function saveDrawerCapacity() {
+        if (!activeDrawerServiceId) return;
+        const capacity = document.getElementById('drawer-capacity-input').value;
+        try {
+            const res = await fetch(`/superadmin/services/${activeDrawerServiceId}/capacity`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ capacity })
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (window.toast) window.toast(data.message, 'success');
+                closeDrawer();
+                setTimeout(() => window.location.reload(), 600);
+            } else {
+                if (window.toast) window.toast(data.message || 'Hata.', 'error');
+            }
+        } catch (e) {
+            if (window.toast) window.toast('Bağlantı hatası.', 'error');
+        }
+    }
+
+    // 6. Servis Profil Rehberi Arama ve Filtreleme
+    let currentProfileStatusFilter = 'all';
+
+    function setProfileStatusFilter(status) {
+        currentProfileStatusFilter = status;
+        document.querySelectorAll('#prof-filter-all, #prof-filter-active, #prof-filter-suspended').forEach(btn => {
+            btn.classList.remove('bg-white', 'text-slate-950', 'shadow-md', 'font-black');
+            btn.classList.add('text-slate-300', 'font-bold');
+        });
+        const activeBtn = document.getElementById('prof-filter-' + status);
+        if (activeBtn) {
+            activeBtn.classList.add('bg-white', 'text-slate-950', 'shadow-md', 'font-black');
+            activeBtn.classList.remove('text-slate-300', 'font-bold');
+        }
+        filterProfileDirectory();
+    }
+
+    function filterProfileDirectory() {
+        const query = (document.getElementById('profile-search-input')?.value || '').toLowerCase().trim();
+        const cityFilter = (document.getElementById('profile-city-filter')?.value || 'all').toLowerCase();
+        const typeFilter = (document.getElementById('profile-type-filter')?.value || 'all').toLowerCase();
+        const cards = document.querySelectorAll('.profile-service-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const name = card.getAttribute('data-name') || '';
+            const owner = card.getAttribute('data-owner') || '';
+            const phone = card.getAttribute('data-phone') || '';
+            const code = card.getAttribute('data-code') || '';
+            const city = card.getAttribute('data-city') || '';
+            const type = card.getAttribute('data-type') || '';
+            const status = card.getAttribute('data-status') || '';
+
+            const matchesQuery = !query || name.includes(query) || owner.includes(query) || phone.includes(query) || code.includes(query);
+            const matchesCity = cityFilter === 'all' || city === cityFilter;
+            const matchesType = typeFilter === 'all' || type === typeFilter;
+            const matchesStatus = currentProfileStatusFilter === 'all' || status === currentProfileStatusFilter;
+
+            if (matchesQuery && matchesCity && matchesType && matchesStatus) {
+                card.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+
+        const countEl = document.getElementById('profile-directory-count');
+        if (countEl) countEl.innerText = `${visibleCount} Servis Listeleniyor`;
+    }
+
+    // 7. Kodlu İzin Sistemi / Servis Profili Erişim Modalı
+    function openAccessRequestModal(serviceId, serviceName, ownerName, phone) {
+        document.getElementById('access-modal-name').innerText = serviceName || '-';
+        document.getElementById('access-modal-owner').innerText = ownerName || '-';
+        document.getElementById('access-modal-phone').innerText = phone || '-';
+        document.getElementById('access-modal-sub').innerText = `SRV-${String(serviceId).padStart(4, '0')} İzin Kontrolü`;
+
+        document.getElementById('access-modal-backdrop').classList.remove('hidden');
+        document.getElementById('access-modal').classList.remove('hidden');
+    }
+
+    function closeAccessRequestModal() {
+        document.getElementById('access-modal-backdrop').classList.add('hidden');
+        document.getElementById('access-modal').classList.add('hidden');
+    }
+
+    // 8. Canlı Denetim Günlüğü (Audit Trail) Filtreleme
+    let currentAuditCategory = 'all';
+
+    function setAuditCategoryFilter(category) {
+        currentAuditCategory = category;
+        ['all', 'auth', 'service', 'system'].forEach(c => {
+            const btn = document.getElementById('audit-filter-' + c);
+            if (btn) {
+                if (c === category) {
+                    btn.classList.add('bg-white', 'text-zinc-950');
+                    btn.classList.remove('text-zinc-400');
+                } else {
+                    btn.classList.remove('bg-white', 'text-zinc-950');
+                    btn.classList.add('text-zinc-400');
+                }
+            }
+        });
+        filterAuditLogs();
+    }
+
+    function filterAuditLogs() {
+        const query = (document.getElementById('audit-search-input')?.value || '').toLowerCase().trim();
+        const items = document.querySelectorAll('.audit-log-item');
+        let visibleCount = 0;
+
+        items.forEach(item => {
+            const cat = item.getAttribute('data-category') || '';
+            const details = item.getAttribute('data-details') || '';
+            const action = item.getAttribute('data-action') || '';
+            const admin = item.getAttribute('data-admin') || '';
+            const ip = item.getAttribute('data-ip') || '';
+
+            const date = item.getAttribute('data-date') || '';
+
+            const matchesCategory = currentAuditCategory === 'all' || cat === currentAuditCategory;
+            const matchesQuery = !query || details.includes(query) || action.includes(query) || admin.includes(query) || ip.includes(query) || date.includes(query);
+
+            if (matchesCategory && matchesQuery) {
+                item.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+
+        const countEl = document.getElementById('audit-count-text');
+        if (countEl) countEl.innerText = `${visibleCount} kayıt listeleniyor`;
+    }
+
+    // 9. WhatsApp Gateway Canlı Test Fonksiyonu
+    async function testWhatsappConnection() {
+        const btn = document.getElementById('btn-test-whatsapp');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Test Ediliyor...';
+        }
+        try {
+            const res = await fetch('/superadmin/test-whatsapp');
+            const data = await res.json();
+            if (window.toast) {
+                window.toast(data.message, data.connected ? 'success' : 'info');
+            }
+        } catch(e) {
+            if (window.toast) window.toast('Test isteği başarısız oldu.', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-plug-circle-check text-xs"></i> <span>WhatsApp Bağlantısını Test Et</span>';
+            }
+        }
+    }
+</script>

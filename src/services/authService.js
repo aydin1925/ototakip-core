@@ -34,7 +34,7 @@ function sanitizePhone(rawPhone) {
 // Yeni Oto servis kaydı
 function register({workshop_name, owner_name, phone, email, password}) {
     if(!workshop_name || !owner_name || !phone || !password) {
-        throw new Error('Lütfen zorunlu alanları (Atölye Adı, Usta Adı, Telefon, Şifre) doldurunuz.');
+        throw new Error('Lütfen zorunlu alanları (Servis Adı, Usta Adı, Telefon, Şifre) doldurunuz.');
     }
 
     if(password.length < 6) {
@@ -45,7 +45,7 @@ function register({workshop_name, owner_name, phone, email, password}) {
 
     const existing = db.prepare('SELECT id FROM workshops WHERE phone = ?').get(cleanPhone);
     if(existing) {
-        throw new Error('Bu telefon numarasıyla kayıtlı bir atölye zaten mevcut.');
+        throw new Error('Bu telefon numarasıyla kayıtlı bir servis zaten mevcut.');
 
     }
 
@@ -87,7 +87,7 @@ function login(identifier, password) {
     `).get(cleanPhone, identifier.trim(), identifier.trim());
 
       if (!workshop) {
-        throw new Error('Bu telefon veya e-posta ile kayıtlı bir atölye bulunamadı.');
+        throw new Error('Bu telefon veya e-posta ile kayıtlı bir servis bulunamadı.');
     }
 
     // Şifreyi doğrula

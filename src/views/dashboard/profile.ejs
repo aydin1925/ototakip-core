@@ -1,0 +1,587 @@
+<!-- OTO SERVİS PROFİL & AYARLAR SAYFASI -->
+<div class="max-w-4xl mx-auto py-2 px-1 sm:px-0 space-y-8 animate-[fadeIn_0.3s_ease_forwards]">
+
+    <!-- ━━━━ ÜST BAŞLIK & SERVİS KİMLİĞİ ━━━━ -->
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-6 border-b border-white/10">
+        <div class="flex items-center gap-4 sm:gap-5 min-w-0">
+            <!-- Logo / Avatar -->
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20 shrink-0 overflow-hidden relative group">
+                <% if (workshop.logo_url) { %>
+                    <img src="<%= workshop.logo_url %>" alt="<%= workshop.workshop_name %>" class="w-full h-full object-cover">
+                <% } else { %>
+                    <span class="font-display text-xl sm:text-2xl font-extrabold text-white">
+                        <%= (workshop.workshop_name || 'ÖO').substring(0, 2).toUpperCase() %>
+                    </span>
+                <% } %>
+            </div>
+
+            <div class="min-w-0">
+                <div class="flex items-center gap-2.5 flex-wrap">
+                    <h1 class="text-xl sm:text-2xl font-display font-bold text-white tracking-tight leading-tight truncate">
+                        <%= workshop.workshop_name %>
+                    </h1>
+                    <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                        <%= (workshop.service_type === 'bosch' ? 'BOSCH CAR SERVICE' : 'ÖZEL SERVİS') %>
+                    </span>
+                </div>
+                <p class="text-xs sm:text-sm text-zinc-400 mt-1 truncate">
+                    <span><%= workshop.owner_name %></span> &middot; 
+                    <span><%= workshop.city || 'Şehir Belirtilmemiş' %> <%= workshop.district ? '/ ' + workshop.district : '' %></span> &middot; 
+                    <span class="text-sky-400 font-mono text-xs">SRV-<%= String(workshop.id).padStart(4, '0') %></span>
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2.5 shrink-0 self-end sm:self-start">
+            <a href="/dashboard" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 text-xs sm:text-sm font-semibold transition flex items-center gap-1.5">
+                <i class="fa-solid fa-gauge-high text-xs text-sky-400"></i>
+                Lift Panosu
+            </a>
+            <button type="button" onclick="submitCurrentSubpageForm()" class="px-5 py-2 rounded-xl bg-white text-zinc-950 hover:bg-zinc-100 text-xs sm:text-sm font-bold transition shadow-lg shadow-white/10 flex items-center gap-1.5">
+                <i class="fa-solid fa-check text-xs text-emerald-600"></i>
+                Kaydet
+            </button>
+        </div>
+    </div>
+
+    <!-- ━━━━ SEKME NAVİGASYONU (UNDERLINE) ━━━━ -->
+    <nav class="flex gap-2 border-b border-white/5 -mt-2 overflow-x-auto hide-scrollbar">
+        <button type="button" onclick="switchTab('general')" id="tab-btn-general" class="profile-nav-tab active px-4 pb-3 text-xs sm:text-sm font-semibold transition-colors relative whitespace-nowrap">
+            Genel Bilgiler & İletişim
+        </button>
+        <button type="button" onclick="switchTab('location')" id="tab-btn-location" class="profile-nav-tab px-4 pb-3 text-xs sm:text-sm font-semibold text-zinc-500 hover:text-zinc-300 transition-colors relative whitespace-nowrap">
+            Konum & Adres
+        </button>
+        <button type="button" onclick="switchTab('security')" id="tab-btn-security" class="profile-nav-tab px-4 pb-3 text-xs sm:text-sm font-semibold text-zinc-500 hover:text-zinc-300 transition-colors relative whitespace-nowrap">
+            Güvenlik & Girişler
+        </button>
+    </nav>
+
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 1. GENEL BİLGİLER FORMU                                                -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="subpage-general" class="profile-subpage space-y-10">
+        <form id="form-general" onsubmit="handleFormSubmit(event, '/profil/general')">
+
+            <!-- Kimlik Bilgileri -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-4 sm:gap-y-6">
+                <div class="lg:col-span-1 pt-1">
+                    <h2 class="text-sm font-display font-bold text-white">Servis Kimliği</h2>
+                    <p class="text-xs text-zinc-500 mt-1 sm:mt-1.5 leading-relaxed">Yasal kayıtlarda, müşteri fişlerinde ve sistemde görünecek resmi ticari bilgiler.</p>
+                </div>
+                <div class="lg:col-span-2 space-y-4 sm:space-y-5">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Servis Resmi Ticari Adı *</label>
+                        <input type="text" name="workshop_name" required value="<%= workshop.workshop_name %>" class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Yetkili / Usta Adı *</label>
+                            <input type="text" name="owner_name" required value="<%= workshop.owner_name %>" class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Servis Segmenti</label>
+                            <select name="service_type" class="w-full bg-[#0d1117] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05] cursor-pointer">
+                                <option value="bosch" <%= workshop.service_type === 'bosch' ? 'selected' : '' %>>Bosch Car Service</option>
+                                <option value="private" <%= workshop.service_type === 'private' ? 'selected' : '' %>>Özel Mekanik & Bakım</option>
+                                <option value="brand" <%= workshop.service_type === 'brand' ? 'selected' : '' %>>Marka Özel Servisi (VAG/BMW/Merc)</option>
+                                <option value="body" <%= workshop.service_type === 'body' ? 'selected' : '' %>>Kaporta & Fırın Boya</option>
+                                <option value="electro" <%= workshop.service_type === 'electro' ? 'selected' : '' %>>Oto Elektrik & Diyagnostik</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="border-t border-white/5 my-8"></div>
+
+            <!-- İletişim Bilgileri -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-4 sm:gap-y-6">
+                <div class="lg:col-span-1 pt-1">
+                    <h2 class="text-sm font-display font-bold text-white">İletişim Bilgileri</h2>
+                    <p class="text-xs text-zinc-500 mt-1 sm:mt-1.5 leading-relaxed">Giriş OTP kodları, bildirimler ve müşteri iletişim kanalları.</p>
+                </div>
+                <div class="lg:col-span-2 space-y-4 sm:space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Cep Telefonu (Giriş & OTP) *</label>
+                            <input type="tel" name="phone" required value="<%= workshop.phone %>" class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm font-mono transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Sabit Hat</label>
+                            <input type="tel" name="landline_phone" value="<%= workshop.landline_phone || '' %>" placeholder="0216 444 00 22" class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm font-mono transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">E-Posta Adresi</label>
+                        <input type="email" name="email" value="<%= workshop.email || '' %>" placeholder="info@servisiniz.com" class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                    </div>
+                </div>
+            </section>
+
+            <div class="border-t border-white/5 my-8"></div>
+
+            <!-- Vergi & Fatura Bilgileri -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-4 sm:gap-y-6">
+                <div class="lg:col-span-1 pt-1">
+                    <h2 class="text-sm font-display font-bold text-white">Vergi & Fatura Bilgileri</h2>
+                    <p class="text-xs text-zinc-500 mt-1 sm:mt-1.5 leading-relaxed">Resmi servis fişi ve muhasebe kayıtları için gerekli vergi dairesi ve VKN bilgileri.</p>
+                </div>
+                <div class="lg:col-span-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Vergi Dairesi</label>
+                            <input type="text" name="tax_office" value="<%= workshop.tax_office || '' %>" placeholder="örn: Kartal V.D." class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Vergi Kimlik Numarası (VKN)</label>
+                            <input type="text" name="tax_number" maxlength="11" value="<%= workshop.tax_number || '' %>" placeholder="10 veya 11 hane" class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm font-mono tracking-widest transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="border-t border-white/5 my-8"></div>
+
+            <!-- Çalışma Düzeni -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-4 sm:gap-y-6">
+                <div class="lg:col-span-1 pt-1">
+                    <h2 class="text-sm font-display font-bold text-white">Çalışma Düzeni & Mesai</h2>
+                    <p class="text-xs text-zinc-500 mt-1 sm:mt-1.5 leading-relaxed">Müşteriye bildirilecek açık saatler ve aktif mesai günleri.</p>
+                </div>
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="grid grid-cols-2 gap-4 sm:gap-5 max-w-xs">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Açılış</label>
+                            <input type="time" name="opening_time" value="<%= workshop.opening_time || '08:30' %>" class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm font-mono text-center transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Kapanış</label>
+                            <input type="time" name="closing_time" value="<%= workshop.closing_time || '18:30' %>" class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm font-mono text-center transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-400 mb-2.5 tracking-wide">Mesai Günleri</label>
+                        <input type="hidden" name="working_days" id="input-working-days" value="<%= workshop.working_days || 'pzt,sal,car,per,cum' %>">
+                        <div class="grid grid-cols-7 gap-1.5 sm:inline-flex sm:gap-0 sm:rounded-xl sm:overflow-hidden sm:border sm:border-white/10">
+                            <% 
+                            const activeDays = (workshop.working_days || 'pzt,sal,car,per,cum').split(',');
+                            const dayMap = [
+                                { code: 'pzt', label: 'Pzt' },
+                                { code: 'sal', label: 'Sal' },
+                                { code: 'car', label: 'Çar' },
+                                { code: 'per', label: 'Per' },
+                                { code: 'cum', label: 'Cum' },
+                                { code: 'cmt', label: 'Cmt' },
+                                { code: 'paz', label: 'Paz' }
+                            ];
+                            dayMap.forEach((d, idx) => {
+                                const isActive = activeDays.includes(d.code);
+                            %>
+                                <button type="button" 
+                                    onclick="toggleWorkday('<%= d.code %>')"
+                                    id="btn-day-<%= d.code %>"
+                                    class="day-toggle-btn py-2 sm:px-3.5 sm:py-2 text-[10px] sm:text-xs font-bold rounded-lg sm:rounded-none transition <%= isActive ? 'bg-sky-500 text-white' : 'bg-transparent text-zinc-500 hover:text-white hover:bg-white/5' %> <%= idx < 6 ? 'sm:border-r sm:border-white/10' : '' %> border sm:border-0 border-white/10">
+                                    <%= d.label %>
+                                </button>
+                            <% }) %>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="border-t border-white/5 my-8"></div>
+
+            <!-- Servis Logosu -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-4 sm:gap-y-6">
+                <div class="lg:col-span-1 pt-1">
+                    <h2 class="text-sm font-display font-bold text-white">Servis Logosu</h2>
+                    <p class="text-xs text-zinc-500 mt-1 sm:mt-1.5 leading-relaxed">Servis fişlerinde ve müşteri takip ekranında görünecek logo.</p>
+                </div>
+                <div class="lg:col-span-2">
+                    <div class="flex flex-col sm:flex-row items-start gap-5">
+                        <div id="logo-preview-box" class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-white/[0.03] border-2 border-dashed border-white/15 flex items-center justify-center shrink-0 overflow-hidden cursor-pointer hover:border-sky-500/40 transition group" onclick="document.getElementById('logo-file-input').click()">
+                            <% if (workshop.logo_url) { %>
+                                <img src="<%= workshop.logo_url %>" id="logo-preview-img" class="w-full h-full object-cover">
+                            <% } else { %>
+                                <div class="text-center p-2" id="logo-placeholder">
+                                    <i class="fa-solid fa-cloud-arrow-up text-xl text-zinc-600 group-hover:text-sky-400 transition mb-1"></i>
+                                    <div class="text-[10px] text-zinc-500 font-medium">Logo Seç</div>
+                                </div>
+                            <% } %>
+                        </div>
+                        <input type="file" id="logo-file-input" accept="image/*" class="hidden" onchange="uploadLogoFile(this)">
+                        
+                        <div class="space-y-3 pt-1">
+                            <div>
+                                <p class="text-xs text-zinc-300 font-medium">Önerilen: <span class="text-white font-mono">400×400 px</span> (Kare PNG/JPG)</p>
+                                <p class="text-[11px] text-zinc-500 mt-0.5">Maksimum 5 MB. Yüklenen görseller otomatik Sharp WebP ile optimize edilir.</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="document.getElementById('logo-file-input').click()" class="px-3.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-xs font-semibold text-white border border-white/15 transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-arrow-up-from-bracket text-[10px]"></i>
+                                    Görsel Yükle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="border-t border-white/5 my-8"></div>
+
+            <!-- Dijital Varlık & Sosyal Medya -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-4 sm:gap-y-6">
+                <div class="lg:col-span-1 pt-1">
+                    <h2 class="text-sm font-display font-bold text-white">Dijital Varlık</h2>
+                    <p class="text-xs text-zinc-500 mt-1 sm:mt-1.5 leading-relaxed">Müşteriye gönderilen teslimat linkinde ve fişlerde görünecek dijital bağlantılar.</p>
+                </div>
+                <div class="lg:col-span-2 space-y-4 sm:space-y-5">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Google İşletme / Yorum İsteme Linki</label>
+                        <div class="flex flex-col sm:flex-row gap-2.5">
+                            <input type="url" name="google_review_url" id="input-google-review" value="<%= workshop.google_review_url || '' %>" placeholder="https://g.page/r/.../review" class="flex-1 bg-white/[0.03] border border-white/10 text-sky-400 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-mono transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                            <button type="button" onclick="testGoogleLink()" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-zinc-300 hover:text-white border border-white/10 transition shrink-0 flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                                Test Et
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-zinc-500 mt-1.5">Google Haritalar işletme profilinizden "Yorum isteyin" kısa linkini yapıştırın.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Instagram Kullanıcı Adı</label>
+                            <div class="relative">
+                                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">@</span>
+                                <input type="text" name="instagram_username" value="<%= workshop.instagram_username || '' %>" placeholder="servis_hesabi" class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl pl-8 pr-4 py-2.5 text-sm transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Web Sitesi</label>
+                            <input type="url" name="website_url" value="<%= workshop.website_url || '' %>" placeholder="https://www.servisiniz.com" class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="border-t border-white/5 my-8"></div>
+
+            <!-- Veri Dışa Aktarma (Excel) -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-4 sm:gap-y-6">
+                <div class="lg:col-span-1 pt-1">
+                    <h2 class="text-sm font-display font-bold text-white">Veri Yedekleme (Excel)</h2>
+                    <p class="text-xs text-zinc-500 mt-1 sm:mt-1.5 leading-relaxed">Servisinize kayıtlı müşteri, araç ve iş emri verilerini tek tıkla Excel olarak indirin.</p>
+                </div>
+                <div class="lg:col-span-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <a href="/profil/export/customers" class="flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] hover:border-emerald-500/30 transition group">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition">
+                                <i class="fa-solid fa-file-excel"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-sm font-semibold text-white">Müşteri & Araç Listesi</div>
+                                <div class="text-[11px] text-zinc-400 mt-0.5">Plaka, müşteri adı, telefon ve araç geçmişi</div>
+                            </div>
+                        </a>
+                        <a href="/profil/export/orders" class="flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] hover:border-sky-500/30 transition group">
+                            <div class="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition">
+                                <i class="fa-solid fa-file-excel"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-sm font-semibold text-white">İş Emirleri & Ciro Raporu</div>
+                                <div class="text-[11px] text-zinc-400 mt-0.5">İş emri no, tutarlar, tarihler ve durumlar</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <div class="pt-6 flex justify-end">
+                <button type="submit" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white text-zinc-950 font-bold text-sm shadow-lg hover:bg-zinc-100 transition">
+                    Genel Bilgileri Kaydet
+                </button>
+            </div>
+        </form>
+    </div>
+
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 2. KONUM & ADRES FORMU                                                 -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="subpage-location" class="profile-subpage hidden space-y-10">
+        <form id="form-location" onsubmit="handleFormSubmit(event, '/profil/location')">
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-4 sm:gap-y-6">
+                <div class="lg:col-span-1 pt-1">
+                    <h2 class="text-sm font-display font-bold text-white">Adres Bilgileri</h2>
+                    <p class="text-xs text-zinc-500 mt-1 sm:mt-1.5 leading-relaxed">Müşterilere SMS ve WhatsApp bildirimlerinde gönderilen açık adres.</p>
+                </div>
+                <div class="lg:col-span-2 space-y-4 sm:space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Şehir *</label>
+                            <input type="text" name="city" required value="<%= workshop.city || '' %>" placeholder="örn: İstanbul" class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">İlçe *</label>
+                            <input type="text" name="district" required value="<%= workshop.district || '' %>" placeholder="örn: Kartal" class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Açık Adres *</label>
+                        <textarea name="address" required rows="3" placeholder="Mahalle, cadde, sokak ve kapı no..." class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm resize-none leading-relaxed transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]"><%= workshop.address || '' %></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <div class="border-t border-white/5 my-8"></div>
+
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-4 sm:gap-y-6">
+                <div class="lg:col-span-1 pt-1">
+                    <h2 class="text-sm font-display font-bold text-white">Google Maps Yol Tarifi</h2>
+                    <p class="text-xs text-zinc-500 mt-1 sm:mt-1.5 leading-relaxed">Müşterilerin harita üzerinden servisinize kolayca ulaşmasını sağlar.</p>
+                </div>
+                <div class="lg:col-span-2 space-y-4">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Google Maps Paylaşım Linki</label>
+                        <div class="flex flex-col sm:flex-row gap-2.5">
+                            <input type="url" name="maps_link" id="input-maps-link" value="<%= workshop.maps_link || '' %>" placeholder="https://maps.google.com/?q=..." class="flex-1 bg-white/[0.03] border border-white/10 text-sky-400 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-mono transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                            <button type="button" onclick="testMapsLink()" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-zinc-300 hover:text-white border border-white/10 transition shrink-0 flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-location-dot text-xs text-rose-400"></i>
+                                Haritada Aç
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-zinc-500 mt-1.5">Google Haritalar uygulamasında servisinizi bulun &rarr; Paylaş butonuna tıklayın &rarr; Linki buraya yapıştırın.</p>
+                    </div>
+                </div>
+            </section>
+
+            <div class="pt-6 flex justify-end">
+                <button type="submit" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white text-zinc-950 font-bold text-sm shadow-lg hover:bg-zinc-100 transition">
+                    Konum Bilgilerini Kaydet
+                </button>
+            </div>
+        </form>
+    </div>
+
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- 3. GÜVENLİK & ŞİFRE FORMU                                              -->
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <div id="subpage-security" class="profile-subpage hidden space-y-10">
+        <form id="form-security" onsubmit="handleFormSubmit(event, '/profil/security')">
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-4 sm:gap-y-6">
+                <div class="lg:col-span-1 pt-1">
+                    <h2 class="text-sm font-display font-bold text-white">Usta Masası Şifresi</h2>
+                    <p class="text-xs text-zinc-500 mt-1 sm:mt-1.5 leading-relaxed">Servis girişinde kullanılan ana güvenlik şifresini yenileyin.</p>
+                </div>
+                <div class="lg:col-span-2 space-y-5">
+                    <div class="flex gap-3 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm mt-0.5 shrink-0"></i>
+                        <p class="text-xs text-amber-200/90 leading-relaxed">
+                            Şifre güncellendiğinde tüm aktif terminallerin oturumu korunur veya bir sonraki girişte yeni şifre istenir.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Yeni Şifre *</label>
+                            <input type="password" name="new_password" required minlength="6" placeholder="En az 6 karakter" class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-zinc-400 mb-1.5 tracking-wide">Yeni Şifre Tekrar *</label>
+                            <input type="password" name="confirm_password" required minlength="6" placeholder="Tekrar yazın" class="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm transition-all focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 focus:bg-white/[0.05]">
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex justify-end">
+                        <button type="submit" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white text-zinc-950 font-bold text-sm shadow-lg hover:bg-zinc-100 transition">
+                            Şifreyi Güncelle
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </form>
+
+        <div class="border-t border-white/5 my-8"></div>
+
+        <!-- Son Giriş Hareketleri -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-x-12 gap-y-4 sm:gap-y-6">
+            <div class="lg:col-span-1 pt-1">
+                <h2 class="text-sm font-display font-bold text-white">Son Giriş Kayıtları</h2>
+                <p class="text-xs text-zinc-500 mt-1 sm:mt-1.5 leading-relaxed">Hesabınıza ait en son gerçekleşen oturum açma denemeleri.</p>
+            </div>
+            <div class="lg:col-span-2 divide-y divide-white/5">
+                <% if (typeof loginLogs !== 'undefined' && loginLogs.length > 0) { %>
+                    <% loginLogs.forEach(log => { %>
+                        <div class="flex items-center justify-between py-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <span class="w-2 h-2 rounded-full <%= log.is_success ? 'bg-emerald-500' : 'bg-red-500' %> shrink-0"></span>
+                                <span class="text-xs sm:text-sm text-zinc-300 truncate">
+                                    <%= log.is_success ? 'Başarılı Oturum Girişi' : 'Hatalı Şifre Denemesi' %>
+                                </span>
+                                <span class="text-[10px] text-zinc-600 font-mono hidden sm:inline">(IP: <%= log.ip_address || 'Yerel' %>)</span>
+                            </div>
+                            <span class="text-[10px] sm:text-xs text-zinc-400 font-mono shrink-0 ml-3 flex items-center gap-1.5" title="Türkiye Saati (GMT+3)">
+                                <i class="fa-regular fa-clock text-[10px] text-zinc-600"></i>
+                                <span><%= log.created_at %></span>
+                                <% if (log.created_at_relative) { %>
+                                    <span class="text-[10px] text-zinc-500 font-sans hidden sm:inline">(<%= log.created_at_relative %>)</span>
+                                <% } %>
+                            </span>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="py-4 text-xs text-zinc-500 italic">
+                        Henüz kayıtlı bir oturum geçmişi bulunmuyor.
+                    </div>
+                <% } %>
+            </div>
+        </section>
+    </div>
+
+</div>
+
+<!-- ━━━━ JAVASCRIPT ETKİLEŞİM & SEKME YÖNETİMİ ━━━━ -->
+<script>
+    // 1. Sekmeler Arası Geçiş
+    function switchTab(subpage) {
+        document.querySelectorAll('.profile-subpage').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.profile-nav-tab').forEach(btn => {
+            btn.classList.remove('active', 'text-white');
+            btn.classList.add('text-zinc-500');
+        });
+
+        const targetSubpage = document.getElementById('subpage-' + subpage);
+        const targetBtn = document.getElementById('tab-btn-' + subpage);
+
+        if (targetSubpage) targetSubpage.classList.remove('hidden');
+        if (targetBtn) {
+            targetBtn.classList.add('active', 'text-white');
+            targetBtn.classList.remove('text-zinc-500');
+        }
+    }
+
+    // URL parametresine göre sekme aç (örn: /profil?subpage=location)
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialSubpage = urlParams.get('subpage');
+    if (initialSubpage && ['general', 'location', 'security'].includes(initialSubpage)) {
+        switchTab(initialSubpage);
+    }
+
+    // 2. Aktif Sekmedeki Formu Submit Et
+    function submitCurrentSubpageForm() {
+        const activeSubpage = document.querySelector('.profile-subpage:not(.hidden)');
+        if (activeSubpage) {
+            const form = activeSubpage.querySelector('form');
+            if (form) form.requestSubmit();
+        }
+    }
+
+    // 3. Mesai Günü Toggle
+    function toggleWorkday(dayCode) {
+        const input = document.getElementById('input-working-days');
+        let days = input.value ? input.value.split(',').filter(Boolean) : [];
+        const btn = document.getElementById('btn-day-' + dayCode);
+
+        if (days.includes(dayCode)) {
+            days = days.filter(d => d !== dayCode);
+            btn.classList.remove('bg-sky-500', 'text-white');
+            btn.classList.add('bg-transparent', 'text-zinc-500');
+        } else {
+            days.push(dayCode);
+            btn.classList.add('bg-sky-500', 'text-white');
+            btn.classList.remove('bg-transparent', 'text-zinc-500');
+        }
+
+        input.value = days.join(',');
+    }
+
+    // 4. Logo Dosyası Yükleme (Fetch API)
+    async function uploadLogoFile(inputEl) {
+        if (!inputEl.files || !inputEl.files[0]) return;
+        const file = inputEl.files[0];
+
+        const formData = new FormData();
+        formData.append('logo', file);
+
+        try {
+            if (window.toast) window.toast('Logo optimize ediliyor ve yükleniyor...', 'info');
+
+            const res = await fetch('/profil/logo', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                if (window.toast) window.toast('Logo başarıyla güncellendi!', 'success');
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                if (window.toast) window.toast(data.message || 'Yükleme başarısız.', 'error');
+            }
+        } catch (e) {
+            console.error('Logo yükleme hatası:', e);
+            if (window.toast) window.toast('Bağlantı hatası oluştu.', 'error');
+        }
+    }
+
+    // 5. Google Link Test
+    function testGoogleLink() {
+        const val = document.getElementById('input-google-review').value;
+        if (val) window.open(val, '_blank');
+        else if (window.toast) window.toast('Lütfen önce bir Google linki giriniz.', 'warning');
+    }
+
+    // 6. Harita Link Test
+    function testMapsLink() {
+        const val = document.getElementById('input-maps-link').value;
+        if (val) window.open(val, '_blank');
+        else if (window.toast) window.toast('Lütfen önce bir Google Maps linki giriniz.', 'warning');
+    }
+
+    // 7. Form AJAX Gönderimi
+    async function handleFormSubmit(e, endpoint) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const jsonBody = {};
+        formData.forEach((value, key) => jsonBody[key] = value);
+
+        try {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(jsonBody)
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                if (window.toast) window.toast(data.message, 'success');
+            } else {
+                if (window.toast) window.toast(data.message || 'Bir hata oluştu.', 'error');
+            }
+        } catch (err) {
+            console.error('Form hatası:', err);
+            if (window.toast) window.toast('Sunucuyla iletişim kurulamadı.', 'error');
+        }
+    }
+</script>
+
+<style>
+    .profile-nav-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #38bdf8;
+        border-radius: 9999px;
+    }
+</style>

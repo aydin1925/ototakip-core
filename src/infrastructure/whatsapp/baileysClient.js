@@ -126,28 +126,27 @@ async function connectToWhatsApp() {
                 continue;
             }
 
-            // 2. Kendi attığımız dış mesajları yoksay (Sadece kendine not / test amaçlı kendi numaramıza yazıyorsak izin ver)
+            // 2. Kendi attığımız dış mesajları yoksay (KRİTİK GÜVENLİK KORUMASI)
+            // Kendi telefonumuzdan başka birine (arkadaş, aile vb.) mesaj attığımızda bot ASLA araya girmemelidir.
             if (msg.key.fromMe) {
-                const isSelfTest = PAIRING_PHONE_NUMBER && (senderPhone.includes(PAIRING_PHONE_NUMBER) || senderPhone.endsWith('@lid'));
-                if (!isSelfTest) {
-                    continue; // Kendi telefonumuzdan başka bir arkadaşımıza yazarken bot araya girmesin
+                // Sadece ve sadece WhatsApp'ta "Kendine Not" (kendi numaramız) sohbetine test yazıyorsak izin ver
+                const myPhone = (sock.user?.id || '').split(':')[0].split('@')[0] || PAIRING_PHONE_NUMBER;
+                const isSelfChat = myPhone && senderPhone.startsWith(myPhone) && !senderPhone.endsWith('@lid');
+                if (!isSelfChat) {
+                    continue; // Kendi telefonumuzdan başka bir kişiye yazarken bot kesinlikle yok saymalıdır
                 }
+            }
+
+            // 3. WhatsApp gizli cihaz kimliklerini (@lid - kişisel rehber sohbetleri) tamamen yoksay
+            // Gerçek müşteri iş emri mesajlaşmaları daima @s.whatsapp.net üzerinden yürür
+            if (senderPhone.endsWith('@lid')) {
+                continue;
             }
 
             const cleanText = incomingText.trim().toLowerCase();
             
             // Telefon numarasını temizle
             let cleanPhone = senderPhone.split('@')[0].split(':')[0].replace(/\D/g, '');
-            
-            // Eğer WhatsApp'ın gizli cihaz kimliği (@lid) ise veya test numaramızsa
-            if (senderPhone.endsWith('@lid')) {
-                if (msg.key.fromMe || (PAIRING_PHONE_NUMBER && senderPhone.includes(PAIRING_PHONE_NUMBER))) {
-                    cleanPhone = PAIRING_PHONE_NUMBER;
-                } else {
-                    // Tanımlanamayan @lid kimliği (kişisel sohbet gizlilik id'si) -> İşleme alma
-                    continue;
-                }
-            }
 
             // 3. Veritabanından bu müşterinin aktif iş emrini bul (Son 10 hane esnekliğiyle)
             const last10Digits = cleanPhone.slice(-10);

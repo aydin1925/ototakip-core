@@ -1,20 +1,73 @@
--- 0. ATÖLYELER VE USTALAR (GİRİŞ VE KAYIT HESAPLARI)
+-- 0. SERVİSLER VE USTALAR (GİRİŞ VE KAYIT HESAPLARI)
 CREATE TABLE IF NOT EXISTS workshops (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    workshop_name TEXT NOT NULL,          -- Atölye / Dükkan Adı (örn: 'Yılmaz Oto Servis')
+    workshop_name TEXT NOT NULL,          -- Servis Adı (örn: 'Yılmaz Oto Servis')
     owner_name TEXT NOT NULL,             -- Usta / Yetkili Adı (örn: 'Ahmet Yılmaz')
     phone TEXT NOT NULL UNIQUE,           -- Giriş için telefon numarası (örn: '905321112233')
     email TEXT,                           -- E-posta (opsiyonel)
     password_hash TEXT NOT NULL,          -- Kriptolanmış şifre özeti
+    capacity INTEGER DEFAULT 3,           -- SüperAdmin tarafından belirlenen lift kapasitesi
+    city TEXT,                            -- İl (örn: 'İstanbul')
+    district TEXT,                        -- İlçe (örn: 'Kartal')
+    address TEXT,                         -- Açık Adres
+    maps_link TEXT,                       -- Google Maps konum/yol tarifi bağlantısı
+    landline_phone TEXT,                  -- Sabit hat telefonu
+    tax_office TEXT,                      -- Vergi Dairesi
+    tax_number TEXT,                      -- Vergi Kimlik Numarası (VKN)
+    service_type TEXT DEFAULT 'private',  -- 'bosch', 'private', 'brand', vb.
+    opening_time TEXT DEFAULT '08:30',    -- Mesai başlangıcı
+    closing_time TEXT DEFAULT '18:30',    -- Mesai bitişi
+    working_days TEXT DEFAULT 'pzt,sal,car,per,cum', -- Aktif mesai günleri
+    logo_url TEXT,                        -- Servis logosu dosya yolu
+    google_review_url TEXT,               -- Google Maps değerlendirme bağlantısı
+    instagram_username TEXT,              -- Instagram kullanıcı adı
+    website_url TEXT,                     -- Web sitesi
+    is_active INTEGER DEFAULT 1,          -- 1: Aktif, 0: Askıda
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_workshops_phone ON workshops(phone);
+CREATE INDEX IF NOT EXISTS idx_workshops_is_active ON workshops(is_active);
 
--- 1. İŞ EMİRLERİ (ARAÇLAR) TABLOSU
+-- 1. SÜPERADMIN HESAPLARI
+CREATE TABLE IF NOT EXISTS superadmins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    email TEXT,
+    password_hash TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. SÜPERADMIN DENETİM GÜNLÜĞÜ (AUDIT LOGS)
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_id INTEGER,
+    action TEXT NOT NULL,                 -- 'IMPERSONATE', 'SERVICE_CREATE', 'SERVICE_UPDATE', 'STATUS_CHANGE', vb.
+    target_type TEXT,                     -- 'SERVICE', 'SYSTEM', vb.
+    target_id INTEGER,
+    details TEXT,
+    ip_address TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+
+-- 3. SERVİS OTURUM GÜVENLİK KAYITLARI (GİRİŞ LOGLARI)
+CREATE TABLE IF NOT EXISTS workshop_login_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    workshop_id INTEGER NOT NULL,
+    ip_address TEXT,
+    is_success INTEGER DEFAULT 1,         -- 1: Başarılı, 0: Başarısız deneme
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (workshop_id) REFERENCES workshops(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_workshop_login_logs ON workshop_login_logs(workshop_id, created_at);
+
+-- 4. İŞ EMİRLERİ (ARAÇLAR) TABLOSU
 CREATE TABLE IF NOT EXISTS work_orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    workshop_id INTEGER DEFAULT 1,         -- Hangi atölyeye ait?
+    workshop_id INTEGER DEFAULT 1,         -- Hangi servise ait?
     plate TEXT NOT NULL,                   -- Plaka (örn: '34 BJK 1903')
     customer_phone TEXT NOT NULL,          -- Müşteri Telefonu
     customer_name TEXT,                    -- Müşteri Adı
@@ -30,7 +83,7 @@ CREATE TABLE IF NOT EXISTS work_orders (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. PARÇA / İŞLEM ONAY TALEPLERİ
+-- 5. PARÇA / İŞLEM ONAY TALEPLERİ
 CREATE TABLE IF NOT EXISTS approval_requests (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     work_order_id INTEGER NOT NULL,
@@ -43,7 +96,7 @@ CREATE TABLE IF NOT EXISTS approval_requests (
     FOREIGN KEY (work_order_id) REFERENCES work_orders(id) ON DELETE CASCADE
 );
 
--- 3. YAPILAN İŞLEMLER / PARÇA ARŞİVİ (YILLIK RAPORLAR VE AI İÇİN)
+-- 6. YAPILAN İŞLEMLER / PARÇA ARŞİVİ (YILLIK RAPORLAR VE AI İÇİN)
 CREATE TABLE IF NOT EXISTS service_operations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     work_order_id INTEGER NOT NULL,
@@ -53,7 +106,7 @@ CREATE TABLE IF NOT EXISTS service_operations (
     FOREIGN KEY (work_order_id) REFERENCES work_orders(id) ON DELETE CASCADE
 );
 
--- 4. ATÖLYE FOTOĞRAFLARI
+-- 7. SERVİS FOTOĞRAFLARI
 CREATE TABLE IF NOT EXISTS service_photos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     work_order_id INTEGER NOT NULL,
@@ -64,7 +117,7 @@ CREATE TABLE IF NOT EXISTS service_photos (
     FOREIGN KEY (work_order_id) REFERENCES work_orders(id) ON DELETE CASCADE
 );
 
--- 5. MÜŞTERİ VE USTA MESAJLAŞMA GEÇMİŞİ (WHATSAPP CRM)
+-- 8. MÜŞTERİ VE USTA MESAJLAŞMA GEÇMİŞİ (WHATSAPP CRM)
 CREATE TABLE IF NOT EXISTS customer_messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     work_order_id INTEGER NOT NULL,
@@ -75,7 +128,7 @@ CREATE TABLE IF NOT EXISTS customer_messages (
     FOREIGN KEY (work_order_id) REFERENCES work_orders(id) ON DELETE CASCADE
 );
 
--- 6. DİJİTAL SERVİS FİŞLERİ VE HESAP ÖZETLERİ
+-- 9. DİJİTAL SERVİS FİŞLERİ VE HESAP ÖZETLERİ
 CREATE TABLE IF NOT EXISTS service_receipts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     work_order_id INTEGER NOT NULL UNIQUE, -- Bir iş emrine ait aktif fiş

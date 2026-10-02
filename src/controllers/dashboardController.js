@@ -9,7 +9,7 @@ function showDashboard(req, res) {
     try {
         const workshopId = req.session.workshopId;
         
-        // Atölyenin liftlerindeki aktif araçları ve parça onay durumlarını çek
+        // Servisin liftlerindeki aktif araçları ve parça onay durumlarını çek
         const cars = workshopService.getDashboardData(workshopId);
 
         res.render('dashboard/index', {
@@ -44,7 +44,7 @@ function showVehicleDetail(req, res) {
             error: null
         });
     } catch (err) {
-        // Araç bulunamadıysa veya başka atölyeye aitse dashboard'a yönlendir
+        // Araç bulunamadıysa veya başka servise aitse dashboard'a yönlendir
         console.error('Araç detay hatası:', err.message);
         res.redirect('/dashboard');
     }
